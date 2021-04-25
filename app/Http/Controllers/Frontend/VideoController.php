@@ -4,102 +4,264 @@
  * This file is part of the Qsnh/meedu.
  *
  * (c) XiaoTeng <616896861@qq.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
  */
 
 namespace App\Http\Controllers\Frontend;
 
-use Exception;
-use App\Models\Order;
-use App\Models\Video;
-use App\Models\VideoComment;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use App\Notifications\SimpleMessageNotification;
-use App\Http\Requests\Frontend\CourseOrVideoCommentCreateRequest;
+use App\Meedu\Cache\Inc\Inc;
+use Illuminate\Http\Request;
+use App\Businesses\BusinessState;
+use App\Constant\FrontendConstant;
+use App\Meedu\Cache\Inc\VideoViewIncItem;
+use App\Services\Member\Services\UserService;
+use App\Services\Order\Services\OrderService;
+use App\Services\Course\Services\VideoService;
+use App\Services\Course\Services\CourseService;
+use App\Services\Course\Services\VideoCommentService;
+use App\Services\Member\Interfaces\UserServiceInterface;
+use App\Services\Order\Interfaces\OrderServiceInterface;
+use App\Services\Course\Interfaces\VideoServiceInterface;
+use App\Services\Course\Interfaces\CourseServiceInterface;
+use App\Services\Course\Interfaces\VideoCommentServiceInterface;
 
 class VideoController extends FrontendController
 {
-    public function show($courseId, $id, $slug)
-    {
-        $video = Video::with(['course', 'comments', 'user', 'comments.user'])
-            ->published()
-            ->show()
-            ->whereId($id)
-            ->firstOrFail();
-        $title = sprintf('视频《%s》', $video->title);
-        $keywords = $video->keywords;
-        $description = $video->description;
+    /**
+     * @var VideoService
+     */
+    protected $videoService;
+    /**
+     * @var VideoCommentService
+     */
+    protected $videoCommentService;
+    /**
+     * @var UserService
+     */
+    protected $userService;
+    /**
+     * @var CourseService
+     */
+    protected $courseService;
+    /**
+     * @var BusinessState
+     */
+    protected $businessState;
+    /**
+     * @var OrderService
+     */
+    protected $orderService;
 
-        return view('frontend.video.show', compact('video', 'title', 'keywords', 'description'));
+    public function __construct(
+        VideoServiceInterface $videoService,
+        VideoCommentServiceInterface $videoCommentService,
+        UserServiceInterface $userService,
+        CourseServiceInterface $courseService,
+        BusinessState $businessState,
+        OrderServiceInterface $orderService
+    ) {
+        parent::__construct();
+
+        $this->videoService = $videoService;
+        $this->videoCommentService = $videoCommentService;
+        $this->userService = $userService;
+        $this->courseService = $courseService;
+        $this->businessState = $businessState;
+        $this->orderService = $orderService;
     }
 
-    public function commentHandler(CourseOrVideoCommentCreateRequest $request, $videoId)
+    public function index(Request $request)
     {
-        $video = Video::findOrFail($videoId);
-        $comment = $video->comments()->save(new VideoComment([
-            'user_id' => Auth::id(),
-            'content' => $request->input('content'),
-        ]));
-        $comment ? flash('评论成功', 'success') : flash('评论失败');
+        $page = $request->input('page', 1);
+        $pageSize = $this->configService->getVideoListPageSize();
+        [
+            'list' => $list,
+            'total' => $total
+        ] = $this->videoService->simplePage($page, $pageSize);
+        $videos = $this->paginator($list, $total, $page, $pageSize);
+        $title = __('all videos');
 
-        return back();
+        return v('frontend.video.index', compact('videos', 'title'));
     }
 
+    public function show(Request $request, $courseId, $id, $slug)
+    {
+        $scene = $request->input('scene');
+        $course = $this->courseService->find($courseId);
+        $video = $this->videoService->find($id);
+
+        // 视频浏览次数
+        Inc::record(new VideoViewIncItem($video['id']));
+
+        // 视频评论
+        $comments = $this->videoCommentService->videoComments($video['id']);
+        $commentUsers = $this->userService->getList(array_column($comments, 'user_id'), ['role']);
+        $commentUsers = array_column($commentUsers, null, 'id');
+
+        // 课程章节
+        $chapters = $this->courseService->chapters($video['course_id']);
+        $videos = $this->videoService->courseVideos($video['course_id']);
+
+        // 是否可以观看视频
+        $canSeeVideo = false;
+        // 试看
+        $trySee = false;
+        // 课程视频观看进度
+        $videoWatchedProgress = [];
+        // 是否可以评论
+        $canComment = $this->businessState->videoCanComment($this->user(), $video);
+
+        if ($this->check()) {
+            $canSeeVideo = $this->businessState->canSeeVideo($this->user(), $video['course'], $video);
+            $canSeeVideo && $this->courseService->createCourseUserRecord($this->id(), $course['id']);
+
+            $userVideoWatchRecords = $this->userService->getUserVideoWatchRecords($this->id(), $course['id']);
+            $videoWatchedProgress = array_column($userVideoWatchRecords, null, 'video_id');
+
+            $trySee = $canSeeVideo === false && $video['free_seconds'] > 0;
+        }
+
+        // 下一个视频
+        $nextVideo = call_user_func(function () use ($chapters, $videos, $video) {
+            $nextVideo = null;
+            $index = false;
+            $lock = false;
+            foreach ($chapters ?: [['id' => 0]] as $chapter) {
+                $chapterId = $chapter['id'];
+                $items = $videos[$chapterId] ?? [];
+                if (!$items) {
+                    continue;
+                }
+                if ($index === false && $chapterId !== $video['chapter_id']) {
+                    continue;
+                }
+                $index = true;
+                foreach ($items as $item) {
+                    if ($lock === false && $item['id'] !== $video['id']) {
+                        continue;
+                    }
+                    if ($lock === true) {
+                        $nextVideo = $item;
+                        break 2;
+                    }
+                    $lock = true;
+                }
+            }
+            return $nextVideo;
+        });
+
+        // 播放地址
+        $playUrls = collect([]);
+        if (!($video['aliyun_video_id'] && $this->configService->getAliyunPrivatePlayStatus())) {
+            $playUrls = get_play_url($video, $trySee);
+            if ($playUrls->isEmpty()) {
+                flash('没有播放地址');
+                return back();
+            }
+        }
+
+        $title = $video['title'];
+        $keywords = $video['seo_keywords'];
+        $description = $video['seo_description'];
+
+        return v('frontend.video.show', compact(
+            'course',
+            'video',
+            'title',
+            'keywords',
+            'description',
+            'comments',
+            'commentUsers',
+            'videos',
+            'chapters',
+            'canSeeVideo',
+            'scene',
+            'playUrls',
+            'nextVideo',
+            'videoWatchedProgress',
+            'trySee',
+            'canComment'
+        ));
+    }
+
+    // 收银台
     public function showBuyPage($id)
     {
-        $video = Video::findOrFail($id);
-        $title = sprintf('购买视频《%s》', $video->title);
+        $video = $this->videoService->find($id);
 
-        return view('frontend.video.buy', compact('video', compact('title')));
-    }
-
-    public function buyHandler($id)
-    {
-        $video = Video::findOrFail($id);
-        $user = Auth::user();
-        $videoUrl = route('video.show', [$video->course->id, $video->id, $video->slug]);
-
-        if ($user->buyVideos()->whereId($video->id)->exists()) {
-            flash('您已经购买过本视频啦', 'success');
-
-            return redirect($videoUrl);
-        }
-        if ($user->credit1 < $video->charge) {
-            flash('余额不足，请先充值', 'warning');
-
-            return redirect(route('member.recharge'));
-        }
-
-        DB::beginTransaction();
-        try {
-            // 创建订单记录
-            $order = $user->orders()->save(new Order([
-                'goods_id' => $video->id,
-                'goods_type' => Order::GOODS_TYPE_VIDEO,
-                'charge' => $video->charge,
-                'status' => Order::STATUS_PAID,
-            ]));
-            // 购买视频
-            $user->buyAVideo($video);
-            // 扣除余额
-            $user->credit1Dec($video->charge);
-            // 消息通知
-            $user->notify(new SimpleMessageNotification($order->getNotificationContent()));
-
-            DB::commit();
-
-            flash('购买成功', 'success');
-
-            return redirect($videoUrl);
-        } catch (Exception $exception) {
-            DB::rollBack();
-            exception_record($exception);
-            flash('购买失败', 'warning');
-
+        if ($this->userService->hasVideo($this->id(), $video['id'])) {
+            flash(__('You have already purchased this course'), 'success');
             return back();
         }
+
+        if ($video['is_ban_sell'] === FrontendConstant::YES) {
+            flash(__('this video cannot be sold'));
+            return back();
+        }
+
+        $course = $this->courseService->find($video['course_id']);
+
+        // 页面标题
+        $title = __('buy video', ['video' => $video['title']]);
+
+        $goods = [
+            'id' => $video['id'],
+            'title' => $video['title'],
+            'thumb' => $course['thumb'],
+            'charge' => $video['charge'],
+            'label' => __('视频'),
+        ];
+
+        $total = $video['charge'];
+
+        $scene = get_payment_scene();
+        $payments = get_payments($scene);
+
+        return v('frontend.order.create', compact('goods', 'title', 'total', 'scene', 'payments'));
+    }
+
+    // 发起支付
+    public function buyHandler(Request $request)
+    {
+        $id = $request->input('goods_id');
+        $promoCodeId = abs((int)$request->input('promo_code_id', 0));
+        $video = $this->videoService->find($id);
+
+        // 禁止单独销售
+        if ($video['is_ban_sell'] === FrontendConstant::YES) {
+            flash(__('this video cannot be sold'));
+            return back();
+        }
+
+        // 价格为0无法购买
+        if ($video['charge'] <= 0) {
+            flash(__('video cant buy'));
+            return back();
+        }
+
+        // 创建订单
+        $order = $this->orderService->createVideoOrder($this->id(), $video, $promoCodeId);
+
+        $videoUrl = route('video.show', [$video['course_id'], $video['id'], $video['slug']]);
+
+        // 如果直接抵扣的话则订单完成
+        if ($order['status'] === FrontendConstant::ORDER_PAID) {
+            flash(__('success'), 'success');
+            return redirect($videoUrl);
+        }
+
+        $paymentScene = $request->input('payment_scene');
+        $payment = $request->input('payment_sign');
+
+        return redirect(
+            route(
+                'order.pay',
+                [
+                    'scene' => $paymentScene,
+                    'payment' => $payment,
+                    'order_id' => $order['order_id'],
+                    's_url' => $videoUrl,
+                ]
+            )
+        );
     }
 }

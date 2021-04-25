@@ -1,97 +1,99 @@
 @extends('layouts.app')
 
+@section('css')
+    <link crossorigin="anonymous" integrity="sha384-K6LrEaceM4QP87RzJ7R4CDXcFN4cFW/A5Q7/fEp/92c2WV+woVw9S9zKDO23sNS+"
+          href="https://lib.baomitu.com/Swiper/4.5.0/css/swiper.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 71px;
+        }
+
+        .nav-box {
+            position: fixed;
+            top: 0;
+            z-index: 999;
+        }
+    </style>
+@endsection
+
 @section('content')
 
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-12 index-banner text-center">
-                <h1>书山有路勤为径，学海无涯苦作舟</h1>
-                <h4>你想要的，这里都有！</h4>
-                <p class="button">
-                    <a href="{{ route('courses') }}">立即订阅</a>
-                </p>
+    <div class="container-fluid slider-box">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="swiper-container">
+                        <div class="swiper-wrapper">
+                            @foreach($sliders as $slider)
+                                <a class="swiper-slide" href="{{$slider['url']}}">
+                                    <img src="{{$slider['thumb']}}" width="100%" height="400">
+                                </a>
+                            @endforeach
+                        </div>
+                        <div class="swiper-pagination"></div>
+                    </div>
+                </div>
+                @if($gAnnouncement)
+                    <div class="col-12">
+                        <div class="announcement-box">
+                            <a href="{{route('announcement.show', [$gAnnouncement['id']])}}">{{$gAnnouncement['title']}}</a>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 
-    <div class="container">
-        <div class="row">
-
-            <div class="col-sm-12 index-banner2">
-                <div class="text-center index-banner-title">
-                    <h3>最新课程</h3>
-                </div>
+    @foreach($banners as $i => $banner)
+        <div class="container-fluid index-latest-banner {{$i % 2 === 0 ? 'bg-fff' : ''}}">
+            <div class="container">
                 <div class="row">
-                    @foreach($courses as $course)
-                        <a href="{{ route('course.show', [$course->id, $course->slug]) }}">
-                            <div class="col-sm-4 course text-center">
-                                <div class="course-item border">
-                                    <div class="thumb">
-                                        <img data-echo="{{ $course->thumb }}" src="/images/loading.png" width="100%" height="300">
-                                    </div>
-                                    <div class="title">{{ $course->title }}</div>
-                                </div>
-                            </div>
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container-fluid roles">
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="container">
-                    <div class="col-sm-12 text-center">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <h3 class="title">计划</h3>
-                            </div>
-                            @foreach($roles as $role)
-                            <div class="col-sm-4 roles-item">
-                                <div class="roles-item-info text-center border">
-                                    <h2 class="title">{{$role->name}}</h2>
-                                    @foreach($role->descriptionRows() as $row)
-                                    <p>{{$row}}</p>
-                                    @endforeach
-                                    <p class="price">￥{{$role->charge}}</p>
-                                    <p>
-                                        <a href="{{route('role.index')}}" class="buy-button">立即订阅</a>
-                                    </p>
-                                </div>
-                            </div>
+                    <div class="col-12">
+                        <div class="banner-title">
+                            <img src="/images/icons/index-banner-course.png" width="38" height="35">
+                            <span class="title">{{$banner['name']}}</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="course-list-box">
+                            @foreach($banner['courses'] as $index => $course)
+                                @include('frontend.components.course-item', ['course' => $course, 'class' => (($index + 1) % 4 == 0) ? 'last' : ''])
                             @endforeach
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endforeach
 
-    <div class="container-fluid index-subscription">
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-sm-8 col-sm-offset-2">
-                            <h3 class="text-center">订阅本站获取最新消息</h3>
-                            <form action="{{route('subscription.email')}}" method="post">
-                                {!! csrf_field() !!}
-                                <div class="row">
-                                    <div class="col-sm-8">
-                                        <input type="email" name="email" class="input-subscription" placeholder="请输入邮箱" required>
-                                    </div>
-                                    <div class="col-sm-4">
-                                        <button type="submit" class="btn-subscription">订阅</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+    <div class="container-fluid friend-link-box">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 friend-link-box-logo">
+                    <img src="{{$gConfig['system']['logo']}}" height="37" alt="{{config('app.name')}}">
+                </div>
+                <div class="col-12 friend-link-box-link">
+                    @foreach($links as $link)
+                        <a href="{{$link['url']}}" target="_blank">{{$link['name']}}</a>
+                    @endforeach
                 </div>
             </div>
         </div>
     </div>
 
+@endsection
+
+@section('js')
+    <script crossorigin="anonymous" integrity="sha384-fOtis9P3S4B2asdoye1/YBpXMaRmuXu925gZhfQA/gnU3dLnftD8zvpk/lhP0YSG"
+            src="https://lib.baomitu.com/Swiper/4.5.0/js/swiper.min.js"></script>
+    <script>
+        var mySwiper = new Swiper('.swiper-container', {
+            autoplay: true,
+            effect: 'fade',
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+        });
+    </script>
 @endsection

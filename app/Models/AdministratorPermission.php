@@ -4,9 +4,6 @@
  * This file is part of the Qsnh/meedu.
  *
  * (c) XiaoTeng <616896861@qq.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
  */
 
 namespace App\Models;
@@ -19,11 +16,7 @@ class AdministratorPermission extends Model
 
     protected $fillable = [
         'display_name', 'slug', 'description',
-        'method', 'url',
-    ];
-
-    protected $appends = [
-        'edit_url', 'destroy_url',
+        'method', 'url', 'route', 'group_name',
     ];
 
     /**
@@ -39,16 +32,6 @@ class AdministratorPermission extends Model
             'permission_id',
             'role_id'
         );
-    }
-
-    public function getEditUrlAttribute()
-    {
-        return route('backend.administrator_permission.edit', $this);
-    }
-
-    public function getDestroyUrlAttribute()
-    {
-        return route('backend.administrator_permission.destroy', $this);
     }
 
     /**

@@ -1,15 +1,18 @@
 <?php
 
+/*
+ * This file is part of the Qsnh/meedu.
+ *
+ * (c) XiaoTeng <616896861@qq.com>
+ */
+
 namespace Tests\Feature\Page;
 
-use App\User;
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Services\Member\Models\User;
 
 class MemberAvatarTest extends TestCase
 {
-
     public function test_member_avatar_page()
     {
         $user = factory(User::class)->create();
@@ -24,8 +27,7 @@ class MemberAvatarTest extends TestCase
         $this->actingAs($user)
             ->visit(route('member.avatar'))
             ->attach(base_path('/public/images/meedu.png'), 'file')
-            ->press('更换')
+            ->press('更换头像')
             ->seePageIs(route('member.avatar'));
     }
-
 }

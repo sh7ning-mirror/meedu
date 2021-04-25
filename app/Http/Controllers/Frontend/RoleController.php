@@ -4,75 +4,97 @@
  * This file is part of the Qsnh/meedu.
  *
  * (c) XiaoTeng <616896861@qq.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
  */
 
 namespace App\Http\Controllers\Frontend;
 
-use App\Models\Role;
-use App\Models\Order;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use App\Constant\FrontendConstant;
 use Illuminate\Support\Facades\Auth;
-use App\Notifications\SimpleMessageNotification;
+use App\Services\Member\Services\RoleService;
+use App\Services\Order\Services\OrderService;
+use App\Services\Member\Interfaces\RoleServiceInterface;
+use App\Services\Order\Interfaces\OrderServiceInterface;
 
 class RoleController extends FrontendController
 {
+    /**
+     * @var RoleService
+     */
+    protected $roleService;
+    /**
+     * @var OrderService
+     */
+    protected $orderService;
+
+    public function __construct(
+        RoleServiceInterface $roleService,
+        OrderServiceInterface $orderService
+    ) {
+        parent::__construct();
+
+        $this->roleService = $roleService;
+        $this->orderService = $orderService;
+    }
+
     public function index()
     {
-        $roles = Role::orderByDesc('weight')->get();
-        ['title' => $title, 'keywords' => $keywords, 'description' => $description] = config('meedu.seo.role_list');
+        $roles = $this->roleService->all();
+        [
+            'title' => $title,
+            'keywords' => $keywords,
+            'description' => $description
+        ] = $this->configService->getSeoRoleListPage();
 
-        return view('frontend.role.index', compact('roles', 'title', 'keywords', 'description'));
+        return v('frontend.role.index', compact('roles', 'title', 'keywords', 'description'));
     }
 
+    // 收银台界面
     public function showBuyPage($id)
     {
-        $role = Role::findOrFail($id);
-        $title = sprintf('购买VIP《%s》', $role->name);
+        $role = $this->roleService->find($id);
+        $title = __('buy role', ['role' => $role['name']]);
+        $goods = [
+            'id' => $role['id'],
+            'thumb' => asset('/images/icons/vip.jpg'),
+            'title' => $role['name'],
+            'charge' => $role['charge'],
+            'label' => $role['name'],
+        ];
+        $total = $role['charge'];
+        $scene = get_payment_scene();
+        $payments = get_payments($scene);
 
-        return view('frontend.role.buy', compact('role', 'title'));
+        return v('frontend.order.create', compact('title', 'goods', 'total', 'payments', 'scene'));
     }
 
-    public function buyHandler($id)
+    // 支付
+    public function buyHandler(Request $request)
     {
-        $role = Role::findOrFail($id);
-        $user = Auth::user();
+        $id = $request->input('goods_id');
+        $promoCodeId = abs((int)$request->input('promo_code_id', 0));
+        $role = $this->roleService->find($id);
 
-        if ($user->role && $user->role->weight != $role->weight) {
-            flash('您的账户下面已经有会员啦');
-
-            return back();
+        $order = $this->orderService->createRoleOrder(Auth::id(), $role, $promoCodeId);
+        if ($order['status'] === FrontendConstant::ORDER_PAID) {
+            flash(__('success'), 'success');
+            return redirect(route('member.orders'));
         }
 
-        DB::beginTransaction();
-        try {
-            // 创建订单记录
-            $order = $user->orders()->save(new Order([
-                'goods_id' => $role->id,
-                'goods_type' => Order::GOODS_TYPE_ROLE,
-                'charge' => $role->charge,
-                'status' => Order::STATUS_PAID,
-            ]));
-            // 扣除余额
-            $user->credit1Dec($role->charge);
-            // 购买会员
-            $user->buyRole($role);
-            // 消息通知
-            $user->notify(new SimpleMessageNotification($order->getNotificationContent()));
+        $paymentScene = $request->input('payment_scene');
+        $payment = $request->input('payment_sign');
 
-            DB::commit();
-
-            flash('购买成功', 'success');
-
-            return redirect(route('member'));
-        } catch (\Exception $exception) {
-            DB::rollBack();
-            exception_record($exception);
-            flash('系统出错');
-
-            return back();
-        }
+        return redirect(
+            route(
+                'order.pay',
+                [
+                    'scene' => $paymentScene,
+                    'payment' => $payment,
+                    'order_id' => $order['order_id'],
+                    // 支付成功后的跳转地址
+                    's_url' => route('member'),
+                ]
+            )
+        );
     }
 }

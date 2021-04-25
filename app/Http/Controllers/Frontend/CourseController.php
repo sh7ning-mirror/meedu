@@ -4,120 +4,273 @@
  * This file is part of the Qsnh/meedu.
  *
  * (c) XiaoTeng <616896861@qq.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
  */
 
 namespace App\Http\Controllers\Frontend;
 
-use Exception;
-use App\Models\Order;
-use App\Models\Course;
-use App\Models\CourseComment;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use App\Notifications\SimpleMessageNotification;
-use App\Http\Requests\Frontend\CourseOrVideoCommentCreateRequest;
+use Illuminate\Support\Arr;
+use Illuminate\Http\Request;
+use App\Businesses\BusinessState;
+use App\Constant\FrontendConstant;
+use App\Services\Member\Services\UserService;
+use App\Services\Order\Services\OrderService;
+use App\Services\Course\Services\VideoService;
+use App\Services\Course\Services\CourseService;
+use App\Services\Course\Services\CourseCommentService;
+use App\Services\Course\Services\CourseCategoryService;
+use App\Services\Member\Interfaces\UserServiceInterface;
+use App\Services\Order\Interfaces\OrderServiceInterface;
+use App\Services\Course\Interfaces\VideoServiceInterface;
+use App\Services\Course\Interfaces\CourseServiceInterface;
+use App\Services\Course\Interfaces\CourseCommentServiceInterface;
+use App\Services\Course\Interfaces\CourseCategoryServiceInterface;
 
 class CourseController extends FrontendController
 {
-    public function index()
-    {
-        $courses = Course::show()
-            ->published()
-            ->orderByDesc('created_at')
-            ->paginate(6);
-        ['title' => $title, 'keywords' => $keywords, 'description' => $description] = config('meedu.seo.course_list');
+    /**
+     * @var CourseService
+     */
+    protected $courseService;
+    /**
+     * @var CourseCommentService
+     */
+    protected $courseCommentService;
+    /**
+     * @var UserService
+     */
+    protected $userService;
+    /**
+     * @var VideoService
+     */
+    protected $videoService;
+    /**
+     * @var OrderService
+     */
+    protected $orderService;
+    /**
+     * @var CourseCategoryService
+     */
+    protected $courseCategoryService;
+    /**
+     * @var BusinessState
+     */
+    protected $businessState;
 
-        return view('frontend.course.index', compact('courses', 'title', 'keywords', 'description'));
+    public function __construct(
+        CourseServiceInterface $courseService,
+        CourseCommentServiceInterface $courseCommentService,
+        UserServiceInterface $userService,
+        VideoServiceInterface $videoService,
+        OrderServiceInterface $orderService,
+        CourseCategoryServiceInterface $courseCategoryService,
+        BusinessState $businessState
+    ) {
+        parent::__construct();
+
+        $this->courseService = $courseService;
+        $this->courseCommentService = $courseCommentService;
+        $this->userService = $userService;
+        $this->videoService = $videoService;
+        $this->orderService = $orderService;
+        $this->courseCategoryService = $courseCategoryService;
+        $this->businessState = $businessState;
     }
 
-    public function show($id, $slug)
+    public function index(Request $request)
     {
-        $course = Course::with(['comments', 'user', 'comments.user'])
-            ->show()
-            ->published()
-            ->whereId($id)
-            ->firstOrFail();
-        $newJoinMembers = $course->getNewJoinMembersCache();
-        $title = sprintf('课程《%s》', $course->title);
-        $keywords = $course->keywords;
-        $description = $course->description;
+        $categoryId = (int)$request->input('category_id');
+        $scene = $request->input('scene', '');
 
-        return view('frontend.course.show', compact(
-            'course',
-            'newJoinMembers',
+        $page = $request->input('page', 1);
+        $pageSize = $this->configService->getCourseListPageSize();
+
+        [
+            'total' => $total,
+            'list' => $list
+        ] = $this->courseService->simplePage($page, $pageSize, $categoryId, $scene);
+        $courses = $this->paginator($list, $total, $page, $pageSize);
+
+        // 分页参数注入
+        $courses->appends([
+            'category_id' => $categoryId,
+            'scene' => $request->input('scene', ''),
+        ]);
+
+        // SEO信息
+        [
+            'title' => $title,
+            'keywords' => $keywords,
+            'description' => $description,
+        ] = $this->configService->getSeoCourseListPage();
+
+        // 课程分类
+        $courseCategories = $this->courseCategoryService->all();
+
+        return v('frontend.course.index', compact(
+            'courses',
             'title',
             'keywords',
-            'description'
+            'description',
+            'courseCategories',
+            'categoryId',
+            'scene'
         ));
     }
 
-    public function commentHandler(CourseOrVideoCommentCreateRequest $request, $courseId)
+    public function show(Request $request, $id, $slug)
     {
-        $course = Course::findOrFail($courseId);
-        $comment = $course->comments()->save(new CourseComment([
-            'user_id' => Auth::id(),
-            'content' => $request->input('content'),
-        ]));
-        $comment ? flash('评论成功', 'success') : flash('评论失败');
+        $scene = $request->input('scene', '');
 
-        return back();
+        $course = $this->courseService->find($id);
+        $chapters = $this->courseService->chapters($course['id']);
+        $videos = $this->videoService->courseVideos($course['id']);
+        $attach = $this->courseService->getCourseAttach($course['id']);
+
+        // 课程评论
+        $comments = $this->courseCommentService->courseComments($course['id']);
+        $commentUsers = $this->userService->getList(array_column($comments, 'user_id'), ['role']);
+        $commentUsers = array_column($commentUsers, null, 'id');
+        $category = $this->courseCategoryService->findOrFail($course['category_id']);
+
+        $title = $course['title'];
+        $keywords = $course['seo_keywords'];
+        $description = $course['seo_description'];
+
+        // 是否购买
+        $isBuy = false;
+        // 喜欢课程
+        $isLikeCourse = false;
+        // 该课程的第一个视频
+        $firstVideo = [];
+        // 课程视频观看进度
+        $videoWatchedProgress = [];
+        // 课程评论开关
+        $canComment = $this->businessState->courseCanComment($this->user(), $course);
+
+        // 已登录用户的一些判断
+        if ($this->check()) {
+            // 是否购买
+            $isBuy = $this->businessState->isBuyCourse($this->id(), $course['id']);
+            // 是否收藏当前课程
+            $isLikeCourse = $this->userService->likeCourseStatus($this->id(), $course['id']);
+            // 课程视频观看进度
+            $userVideoWatchRecords = $this->userService->getUserVideoWatchRecords($this->id(), $course['id']);
+            $videoWatchedProgress = array_column($userVideoWatchRecords, null, 'video_id');
+            // 最近一条观看记录
+            $latestWatchRecord = $this->userService->getLatestRecord($this->id(), $course['id']);
+            $latestWatchRecord && $firstVideo = $this->videoService->findOrNull($latestWatchRecord['video_id']);
+        }
+
+        if (!$firstVideo) {
+            $firstChapter = Arr::first($chapters);
+            if ($firstChapter && ($videos[$firstChapter['id']] ?? [])) {
+                $firstVideo = $videos[$firstChapter['id']][0];
+            } else {
+                Arr::first($videos) && $firstVideo = $videos[0][0];
+            }
+        }
+
+        return v('frontend.course.show', compact(
+            'course',
+            'title',
+            'keywords',
+            'description',
+            'comments',
+            'commentUsers',
+            'videos',
+            'chapters',
+            'isBuy',
+            'category',
+            'isLikeCourse',
+            'firstVideo',
+            'scene',
+            'videoWatchedProgress',
+            'attach',
+            'canComment'
+        ));
     }
 
+    // 收银台
     public function showBuyPage($id)
     {
-        $course = Course::findOrFail($id);
-        $title = sprintf('购买课程《%s》', $course->title);
+        $course = $this->courseService->find($id);
 
-        return view('frontend.course.buy', compact('course', 'title'));
-    }
-
-    public function buyHandler($id)
-    {
-        $course = Course::findOrFail($id);
-        $user = Auth::user();
-
-        if ($user->joinCourses()->whereId($course->id)->first()) {
-            flash('该视频已购买啦', 'success');
-
-            return redirect(route($course->seeUrl()));
-        }
-
-        if ($user->credit1 < $course->charge) {
-            flash('余额不足请先充值');
-
-            return redirect(route('member.recharge'));
-        }
-
-        DB::beginTransaction();
-        try {
-            // 创建订单记录
-            $order = $user->orders()->save(new Order([
-                'goods_id' => $course->id,
-                'goods_type' => Order::GOODS_TYPE_COURSE,
-                'charge' => $course->charge,
-                'status' => Order::STATUS_PAID,
-            ]));
-            // 购买视频
-            $user->joinACourse($course);
-            // 扣除余额
-            $user->credit1Dec($course->charge);
-            // 消息通知
-            $user->notify(new SimpleMessageNotification($order->getNotificationContent()));
-
-            DB::commit();
-
-            flash('购买成功', 'success');
-
-            return redirect(route('course.show', [$course->id, $course->slug]));
-        } catch (Exception $exception) {
-            DB::rollBack();
-            exception_record($exception);
-            flash('购买失败');
-
+        if ($this->userService->hasCourse($this->id(), $id)) {
+            flash(__('You have already purchased this course'), 'success');
             return back();
         }
+
+        // 页面标题
+        $title = __('buy course', ['course' => $course['title']]);
+
+        $goods = [
+            'id' => $course['id'],
+            'title' => $course['title'],
+            'thumb' => $course['thumb'],
+            'charge' => $course['charge'],
+            'label' => __('点播课程'),
+        ];
+
+        $total = $course['charge'];
+
+        $scene = get_payment_scene();
+        $payments = get_payments($scene);
+
+        return v('frontend.order.create', compact('goods', 'title', 'total', 'scene', 'payments'));
+    }
+
+    // 发起支付
+    public function buyHandler(Request $request)
+    {
+        $id = $request->input('goods_id');
+        $promoCodeId = abs((int)$request->input('promo_code_id'));
+        $course = $this->courseService->find($id);
+
+        // 价格为0则无法按购买
+        if ($course['charge'] <= 0) {
+            flash(__('course cant buy'));
+            return back();
+        }
+
+        // 创建订单
+        $order = $this->orderService->createCourseOrder($this->id(), $course, $promoCodeId);
+
+        $courseUrl = route('course.show', [$course['id'], $course['slug']]);
+
+        // 如果直接抵扣的话则直接完成
+        if ($order['status'] === FrontendConstant::ORDER_PAID) {
+            flash(__('success'), 'success');
+            return redirect($courseUrl);
+        }
+
+        $paymentScene = $request->input('payment_scene');
+        $payment = $request->input('payment_sign');
+
+        return redirect(
+            route(
+                'order.pay',
+                [
+                    'scene' => $paymentScene,
+                    'payment' => $payment,
+                    'order_id' => $order['order_id'],
+                    's_url' => $courseUrl,
+                ]
+            )
+        );
+    }
+
+    // 附件下载
+    public function attachDownload($id)
+    {
+        $courseAttach = $this->courseService->getAttach($id);
+        $course = $this->courseService->find($courseAttach['course_id']);
+
+        if ($course['charge'] > 0 && !$this->businessState->isBuyCourse($this->id(), $courseAttach['course_id'])) {
+            abort(403, __('please buy course'));
+        }
+
+        $this->courseService->courseAttachDownloadTimesInc($courseAttach['id']);
+
+        return response()->download(storage_path('app/attach/' . $courseAttach['path']));
     }
 }

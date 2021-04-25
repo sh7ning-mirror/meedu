@@ -1,5 +1,11 @@
 <?php
 
+/*
+ * This file is part of the Qsnh/meedu.
+ *
+ * (c) XiaoTeng <616896861@qq.com>
+ */
+
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -11,9 +17,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        if (app()->environment('local')) {
+        if (is_dev()) {
             $this->call(CourseVideoSeeder::class);
-            $this->call(UserSeeder::class);
         }
     }
 }

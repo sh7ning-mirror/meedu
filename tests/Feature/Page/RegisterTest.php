@@ -1,76 +1,60 @@
 <?php
 
+/*
+ * This file is part of the Qsnh/meedu.
+ *
+ * (c) XiaoTeng <616896861@qq.com>
+ */
+
 namespace Tests\Feature\Page;
 
-use App\User;
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Services\Member\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class RegisterTest extends TestCase
 {
-
     public function test_visit()
     {
         $response = $this->get(route('register'));
         $response->assertResponseStatus(200);
         $response->see('注册');
-        $response->see('登陆');
+        $response->see('登录');
     }
 
-    public function test_register_nick_name_repeat_fail()
+    public function test_submit()
     {
-        $user = [
-            'nick_name' => 'XiaoTeng',
-            'mobile' => '13677778888',
-            'password' => '123456',
-        ];
-        factory(User::class)->create([
-            'nick_name' => $user['nick_name'],
-        ]);
+        $this->session(['sms_register' => 'smscode']);
         $this->visit(route('register'))
-            ->type($user['nick_name'], 'nick_name')
-            ->type($user['mobile'], 'mobile')
-            ->type($user['password'], 'password')
-            ->type($user['password'], 'password_confirmation')
-            ->press('注册')
-            ->seePageIs(route('register'));
+            ->type('13900001111', 'mobile')
+            ->type('smscode', 'sms_captcha')
+            ->type('register', 'sms_captcha_key')
+            ->type('meedu123', 'password')
+            ->press('注册');
+
+        $user = User::query()->where('mobile', '13900001111')->first();
+        $this->assertNotNull($user);
+        $this->assertTrue(Hash::check('meedu123', $user->password));
+        // 未配置昵称
+        $this->assertEquals(0, $user->is_set_nickname);
+        // 已配置密码
+        $this->assertEquals(1, $user->is_password_set);
     }
 
-    public function test_register_mobile_repeat_fail()
+    public function test_submit_credit1_reward()
     {
-        $user = [
-            'nick_name' => 'XiaoTeng',
-            'mobile' => '13677778888',
-            'password' => '123456',
-        ];
-        factory(User::class)->create([
-            'mobile' => $user['mobile'],
-        ]);
+        config(['meedu.member.credit1.register' => 112]);
+
+        $this->session(['sms_register' => 'smscode']);
         $this->visit(route('register'))
-            ->type($user['nick_name'], 'nick_name')
-            ->type($user['mobile'], 'mobile')
-            ->type($user['password'], 'password')
-            ->type($user['password'], 'password_confirmation')
-            ->press('注册')
-            ->seePageIs(route('register'));
+            ->type('13900001111', 'mobile')
+            ->type('smscode', 'sms_captcha')
+            ->type('register', 'sms_captcha_key')
+            ->type('meedu123', 'password')
+            ->press('注册');
+
+        $user = User::query()->where('mobile', '13900001111')->first();
+        $this->assertNotEmpty($user);
+        $this->assertEquals(112, $user->credit1);
     }
-
-    public function register_mock_user_success()
-    {
-        $user = [
-            'nick_name' => 'Xiaoteng',
-            'mobile' => '13677778888',
-            'password' => '123456',
-        ];
-        $this->visit(route('register'))
-            ->type($user['nick_name'], 'nick_name')
-            ->type($user['mobile'], 'mobile')
-            ->type($user['password'], 'password')
-            ->type($user['password'], 'password_confirmation')
-            ->press('注册')
-            ->seePageIs(route('login'));
-    }
-
-
 }

@@ -1,28 +1,76 @@
-@extends('layouts.app')
-
-@section('css')
-    <link href="https://cdn.bootcss.com/social-share.js/1.0.16/css/share.min.css" rel="stylesheet">
-@endsection
+@extends('layouts.app-active')
 
 @section('content')
 
-    <div class="container-fluid course-detail-banner">
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <h2 class="color-fff">{{ $course->title }}</h2>
-                            <p class="lh-30">
-                                <span class="label label-default">
-                                    更新于 {{ $course->created_at->diffForHumans() }}
-                                </span>
-                                @if($course->charge)
-                                    <span class="label label-danger">价格 {{$course->charge}}元</span>
+    <div class="container-fluid course-banner">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="nav-bar">
+                        <a href="{{route('courses')}}">所有课程</a>
+                        <span>></span>
+                        <a href="{{route('courses')}}?category_id={{$category['id']}}">{{$category['name']}}</a>
+                        <span>></span>
+                        <a href="javascript:void(0)">{{$course['title']}}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="course-info-box">
+                        <div class="course-thumb">
+                            <img class="course-thumb-img" src="{{$course['thumb']}}" width="320" height="240">
+                            @if($isBuy)
+                                <div class="paid">
+                                    <img src="/images/icons/paid.png" width="100" height="100">
+                                </div>
+                            @endif
+                        </div>
+                        <div class="course-info">
+                            <h2 class="course-title">
+                                {{$course['title']}}
+                                @if($isLikeCourse)
+                                    <div data-login="{{$user ? 1 : 0}}"
+                                         data-url="{{route('ajax.course.like', [$course['id']])}}" class="like-button">
+                                        <img src="/images/icons/like-hover.png" width="24" height="24">
+                                        <span>已收藏</span>
+                                    </div>
                                 @else
-                                    <span class="label label-success">免费</span>
+                                    <div data-login="{{$user ? 1 : 0}}"
+                                         data-url="{{route('ajax.course.like', [$course['id']])}}" class="like-button">
+                                        <img src="/images/icons/like.png" width="24" height="24">
+                                        <span>收藏课程</span>
+                                    </div>
                                 @endif
-                            </p>
+                            </h2>
+                            <div class="course-description">{{$course['short_description']}}</div>
+                            <div class="course-extra-info">
+                                @if($isBuy)
+                                    @if($firstVideo)
+                                        <a href="{{route('video.show', [$firstVideo['course_id'], $firstVideo['id'], $firstVideo['slug']])}}"
+                                           class="buy-course-button">开始学习</a>
+                                    @else
+                                        <a href="javascript:void(0);" onclick="flashWarning('暂无视频')"
+                                           class="buy-course-button">开始学习</a>
+                                    @endif
+                                @else
+                                    @if($course['charge'] > 0)
+                                        <span class="course-price"><small>￥</small>{{$course['charge']}}</span>
+                                        <a data-login="{{$user ? 1 : 0}}"
+                                           href="{{route('member.course.buy', [$course['id']])}}"
+                                           class="buy-course-button login-auth">订阅课程</a>
+                                        <a href="{{route('role.index')}}" class="join-role-alert-link">
+                                            <img src="{{asset('/images/icons/vip.png')}}" width="24" height="24">
+                                            <span>开通会员看全站</span>
+                                        </a>
+                                    @endif
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -30,115 +78,183 @@
         </div>
     </div>
 
-    <div class="container course-show-box">
+    <div class="container">
         <div class="row">
-            <div class="col-sm-9 border course-video-list-box">
-                <div class="row course-video-tab">
-                    <div class="col-sm-4 course-video-tab-item active" data="intro">简介</div>
-                    <div class="col-sm-4 course-video-tab-item" data="list">视频列表</div>
-                    <div class="col-sm-4 course-video-tab-item" data="comment">评论</div>
+            <div class="col-12">
+                <div class="course-menu-box"
+                     style="margin-top: 0px; border-radius:0px 0px 8px 8px;">
+                    <div class="menu-item {{!$scene ? 'active' : ''}}">
+                        <a href="{{route('course.show', [$course['id'], $course['slug']])}}"
+                           class="course-show-menu-item" data-page="course-show-page-desc">课程介绍</a>
+                    </div>
+                    <div class="menu-item {{$scene === 'chapter' ? 'active' : ''}}">
+                        <a href="{{route('course.show', [$course['id'], $course['slug']])}}?scene=chapter"
+                           class="course-show-menu-item" data-page="course-show-page-chapter">课程目录</a>
+                    </div>
+                    <div class="menu-item {{$scene === 'comment' ? 'active' : ''}}">
+                        <a href="{{route('course.show', [$course['id'], $course['slug']])}}?scene=comment"
+                           class="course-show-menu-item"
+                           data-page="course-show-page-comment">课程讨论</a>
+                    </div>
+                    <div class="menu-item {{$scene === 'attach' ? 'active' : ''}}">
+                        <a href="{{route('course.show', [$course['id'], $course['slug']])}}?scene=attach"
+                           class="course-show-menu-item"
+                           data-page="course-show-page-attach">课程附件</a>
+                    </div>
                 </div>
-               <div class="tab-content-box">
-                   <div class="intro">
-                       {!! $course->getDescription() !!}
-                       <hr>
-                       <div class="social-share"></div>
-                   </div>
-                   <div class="list" style="display: none">
-                       <table style="width: 100%">
-                           @forelse($course->getVideos() as $video)
-                               <tr class="lh-30">
-                                   <td>
-                                       <a href="{{ route('video.show', [$course->id, $video->id, $video->slug]) }}">
-                                           <i class="fa fa-play-circle-o" aria-hidden="true"></i> {{ $video->title  }}
-                                       </a>
-                                   </td>
-                                   <td width="80" class="text-right">{{ $video->updated_at->diffForHumans() }}</td>
-                               </tr>
-                           @empty
-                               <tr>
-                                   <td colspan="2" class="text-center">暂无数据</td>
-                               </tr>
-                           @endforelse
-                       </table>
-                   </div>
-                   <div class="comment" style="display: none">
-
-                       @include('components.frontend.comment_box', ['submitUrl' => route('course.comment', $course)])
-
-                       <div class="col-sm-12">
-                           <table class="comment-list-box">
-                               <tbody>
-                               @forelse($course->comments as $comment)
-                               <tr class="comment-list-item">
-                                   <td width="70" class="user-info">
-                                       <p><img class="avatar" src="{{$comment->user->avatar}}" width="50" height="50"></p>
-                                       <p class="nickname">
-                                           {{$comment->user->nick_name}}
-                                       </p>
-                                       @if($comment->user->role)
-                                           <p class="nickname">{{$comment->user->role->name}}</p>
-                                       @endif
-                                   </td>
-                                   <td class="comment-content">
-                                       <p>{!! $comment->getContent() !!}</p>
-                                       <p class="text-right color-gray">{{$comment->created_at->diffForHumans()}}</p>
-                                   </td>
-                               </tr>
-                               @empty
-                               <tr>
-                                   <td class="text-center color-gray" colspan="2">0评论</td>
-                               </tr>
-                               @endforelse
-                               </tbody>
-                           </table>
-                       </div>
-
-                   </div>
-               </div>
             </div>
-
-            <div class="col-sm-3 course-show-page-right">
-                <div class="col-sm-12 border option">
-                    <a href="{{ $course->seeUrl() }}" class="join-course-btn">立即学习</a>
-                </div>
-
-                <div class="col-sm-12 border news-student">
-                    <h4>新加入同学</h4>
-                    <ul>
-                        @forelse($newJoinMembers as $member)
-                            <li>
-                                <img src="{{ $member->avatar }}" width="24" height="24">
-                                <b>{{ $member->nick_name }}</b>
-                                <span class="color-gray font-size-12">{{$member->pivot->created_at}}</span>
-                            </li>
-                            @empty
-                            <li>
-                                <p class="text-center lh-30 color-gray">暂无数据</p>
-                            </li>
-                        @endforelse
-                    </ul>
-                </div>
-
-            </div>
-
         </div>
     </div>
 
-@endsection
+    <div class="container-fluid">
+        <div class="container course-show-page-desc {{!$scene ? '' : 'display-none'}}">
+            <div class="row">
+                <div class="col-12">
+                    {!! $course['render_desc'] !!}
+                </div>
+            </div>
+        </div>
 
-@section('js')
-    <script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js"></script>
-    @include('components.frontend.emoji')
-    @include('components.frontend.comment_js')
-    <script>
-        $(function () {
-            $('.course-video-tab-item').click(function () {
-                $('.course-video-tab-item').removeClass('active');
-                $(this).addClass('active');
-                $('.tab-content-box .' + $(this).attr('data')).show();
-                $('.tab-content-box .' + $(this).attr('data')).siblings().hide();
-            });
-        });
-    </script>
+        <div class="container course-show-page-chapter {{$scene !== 'chapter' ? 'display-none' : ''}}">
+            <div class="row">
+                <div class="col-12">
+                    <div class="course-chapter">
+                        @if($chapters)
+                            @foreach($chapters as $chapterIndex => $chapter)
+                                @if($videosBox = $videos[$chapter['id']] ?? [])@endif
+                                <div class="course-chapter-title" data-dom="course-videos-box-{{$chapter['id']}}">
+                                    {{$chapter['title']}}
+                                    <small class="videos-count">
+                                        {{count($videosBox)}}节
+                                        <i class="fa {{$chapterIndex === 0 ? 'fa-angle-up' : 'fa-angle-down'}}"></i>
+                                    </small>
+                                </div>
+                                @foreach($videosBox as $video)
+                                    <div class="course-videos-box {{$chapterIndex === 0 ? 'active' : ''}} course-videos-box-{{$chapter['id']}}">
+                                        <a href="{{route('video.show', [$video['course_id'], $video['id'], $video['slug']])}}"
+                                           class="course-videos-item {{$loop->first ? 'first' : ''}} {{$loop->last ? 'last' : ''}}">
+                                            <div class="player-icon"></div>
+                                            <div href="{{route('video.show', [$video['course_id'], $video['id'], $video['slug']])}}"
+                                                 class="video-title">
+                                                {{$video['title']}}
+                                                @if($video['charge'] === 0)
+                                                    <span class="free-label">免费</span>
+                                                @else
+                                                    @if($video['free_seconds'] > 0)
+                                                        <span class="free-label">试看</span>
+                                                    @endif
+                                                @endif
+                                            </div>
+                                            <div class="video-duration">
+                                                @if(isset($videoWatchedProgress[$video['id']]) && $videoWatchedProgress[$video['id']]['watched_at'])
+                                                    已看完
+                                                @else
+                                                    {{duration_humans($video['duration'])}}
+                                                @endif
+                                            </div>
+                                        </a>
+                                    </div>
+                                @endforeach
+                            @endforeach
+                        @else
+                            @foreach($videos[0] ?? [] as $video)
+                                <div class="course-videos-box" style="display: block">
+                                    <a href="{{route('video.show', [$video['course_id'], $video['id'], $video['slug']])}}"
+                                       class="course-videos-item {{$loop->first ? 'first' : ''}} {{$loop->last ? 'last' : ''}}">
+                                        <div class="player-icon"></div>
+                                        <div href="{{route('video.show', [$video['course_id'], $video['id'], $video['slug']])}}"
+                                             class="video-title">
+                                            {{$video['title']}}
+                                            @if($video['charge'] === 0)
+                                                <span class="free-label">免费</span>
+                                            @else
+                                                @if($video['free_seconds'] > 0)
+                                                    <span class="free-label">试看</span>
+                                                @endif
+                                            @endif
+                                        </div>
+                                        <div class="video-duration">
+                                            @if(isset($videoWatchedProgress[$video['id']]) && $videoWatchedProgress[$video['id']]['watched_at'])
+                                                已看完
+                                            @else
+                                                {{duration_humans($video['duration'])}}
+                                            @endif
+                                        </div>
+                                    </a>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container course-show-page-comment {{$scene !== 'comment' ? 'display-none' : ''}}">
+            <div class="row">
+                <div class="col-12">
+
+                    @if($canComment)
+                        <div class="comment-box">
+                            <div class="comment-title">
+                                课程讨论
+                            </div>
+                            <div class="comment-input-box">
+                                <textarea name="content" placeholder="请输入评论内容" class="form-control" rows="3"></textarea>
+                                <button type="button" data-url="{{route('ajax.course.comment', [$course['id']])}}"
+                                        data-login="{{$user ? 1 : 0}}" data-input="content" class="comment-button">评论
+                                </button>
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="comment-list-box">
+                        @forelse($comments as $commentItem)
+                            <div class="comment-list-item">
+                                <div class="comment-user-avatar">
+                                    <img src="{{$commentUsers[$commentItem['user_id']]['avatar']}}" width="70"
+                                         height="70">
+                                </div>
+                                <div class="comment-content-box">
+                                    <div class="comment-user-nickname">{{$commentUsers[$commentItem['user_id']]['nick_name']}}</div>
+                                    <div class="comment-content">
+                                        {!! $commentItem['render_content'] !!}
+                                    </div>
+                                    <div class="comment-info">
+                                        <span class="comment-createAt">{{\Carbon\Carbon::parse($commentItem['created_at'])->diffForHumans()}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            @include('frontend.components.none')
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container course-show-page-attach {{$scene !== 'comment' ? 'display-none' : ''}}">
+            <div class="row">
+                <div class="col-12">
+                    @if(!$attach)
+                        @include('frontend.components.none')
+                    @else
+                        @foreach($attach as $item)
+                            <div class="attach-item">
+                                <div class="name">{{$item['name']}}</div>
+                                <div class="size">{{round($item['size']/1024, 2)}}KB</div>
+                                <div class="option">
+                                    <a
+                                            href="{{route('course.attach.download', $item['id'])}}?_t={{time()}}"
+                                            target="_blank">下载</a>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @include('frontend.components.recom_courses')
+
 @endsection

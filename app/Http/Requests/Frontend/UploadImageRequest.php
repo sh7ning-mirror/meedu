@@ -4,37 +4,30 @@
  * This file is part of the Qsnh/meedu.
  *
  * (c) XiaoTeng <616896861@qq.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
  */
 
 namespace App\Http\Requests\Frontend;
-
-use Illuminate\Support\Facades\Storage;
 
 class UploadImageRequest extends BaseRequest
 {
     public function rules()
     {
         return [
-            'file' => 'required|image',
+            'file' => 'required|image|max:2048',
         ];
     }
 
     public function messages()
     {
         return [
-            'file.required' => '请上传文件',
-            'file.image' => '请上传图片文件',
+            'file.required' => __('file.required'),
+            'file.image' => __('file.image'),
+            'file.max' => __('file.max', ['size' => '2M']),
         ];
     }
 
     public function filldata()
     {
-        $disk = config('filesystems.default');
-        $path = $this->file('file')->store('images', compact('disk'));
-
-        return [$path, Storage::disk($disk)->url($path)];
+        return save_image($this->file('file'));
     }
 }

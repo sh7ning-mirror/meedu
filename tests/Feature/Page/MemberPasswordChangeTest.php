@@ -1,16 +1,19 @@
 <?php
 
+/*
+ * This file is part of the Qsnh/meedu.
+ *
+ * (c) XiaoTeng <616896861@qq.com>
+ */
+
 namespace Tests\Feature\Page;
 
-use App\User;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Services\Member\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class MemberPasswordChangeTest extends TestCase
 {
-
     public function test_member_password_change()
     {
         $user = factory(User::class)->create();
@@ -23,7 +26,7 @@ class MemberPasswordChangeTest extends TestCase
     {
         $password = '123456';
         $user = factory(User::class)->create([
-            'password' => bcrypt($password),
+            'password' => Hash::make($password),
         ]);
         $newPassword = '123456789';
         $this->actingAs($user)
@@ -31,9 +34,11 @@ class MemberPasswordChangeTest extends TestCase
             ->type($newPassword, 'new_password')
             ->type($newPassword, 'new_password_confirmation')
             ->type($password, 'old_password')
-            ->press('重置')
+            ->press('修改密码')
             ->assertResponseStatus(200);
+
+        // 断言密码修改成功
+        $user->refresh();
         $this->assertTrue(Hash::check($newPassword, $user->password));
     }
-
 }

@@ -1,5 +1,11 @@
 <?php
 
+/*
+ * This file is part of the Qsnh/meedu.
+ *
+ * (c) XiaoTeng <616896861@qq.com>
+ */
+
 use Illuminate\Database\Seeder;
 
 class CourseVideoSeeder extends Seeder
@@ -11,6 +17,6 @@ class CourseVideoSeeder extends Seeder
      */
     public function run()
     {
-        factory(\App\Models\Video::class, 50)->create();
+        factory(\App\Services\Course\Models\Video::class, 20)->create();
     }
 }

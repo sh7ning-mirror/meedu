@@ -1,47 +1,50 @@
-@extends('layouts.app')
+@extends('layouts.app-active')
+
+@section('css')
+    <style>
+        .member-nav-box {
+            background-color: #323232;
+        }
+
+        .login-button-hover {
+            background-color: #ffcb00 !important;
+            color: #323232 !important;
+        }
+    </style>
+@endsection
 
 @section('content')
 
-    <div class="container-fluid">
+    <div class="container-fluid role-center-banner">
         <div class="row">
-            <div class="col-sm-12 recharge-banner">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <h3>购买VIP</h3>
-                        </div>
-                    </div>
-                </div>
+            <div class="col-12 text-center">
+                <img src="/images/role-center.png" width="203" height="44">
             </div>
         </div>
     </div>
 
-    <div class="container-fluid roles">
+    <div class="container">
         <div class="row">
-            <div class="col-sm-12">
-                <div class="container">
-                    <div class="col-sm-12 text-center">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <h3 class="title">计划</h3>
+            <div class="col-12">
+                <div class="role-list-box d-flex justify-content-center">
+                    @foreach($gRoles as $index => $roleItem)
+                        <div data-url="{{route('member.role.buy', [$roleItem['id']])}}"
+                             class="role-list-item {{$index % 3 === 0 ? 'first' : ''}}">
+                            <div class="name">{{$roleItem['name']}}</div>
+                            <div class="price">
+                                <small>￥</small>{{$roleItem['charge']}}</div>
+                            <div class="desc">
+                                @foreach($roleItem['desc_rows'] as $item)
+                                    <p>{{$item}}</p>
+                                @endforeach
                             </div>
-                            @foreach($roles as $role)
-                                <div class="col-sm-4 roles-item">
-                                    <div class="roles-item-info text-center border">
-                                        <h2 class="title">{{$role->name}}</h2>
-                                        @foreach($role->descriptionRows() as $row)
-                                            <p>{{$row}}</p>
-                                        @endforeach
-                                        <p class="price">￥{{$role->charge}}</p>
-                                        <p>
-                                            <a href="{{route('member.role.buy', $role)}}" class="buy-button">点我订阅</a>
-                                        </p>
-                                    </div>
-                                </div>
-                            @endforeach
                         </div>
-                    </div>
+                    @endforeach
                 </div>
+            </div>
+            <div class="col-12 text-center">
+                <a data-login="{{$user ? 1 : 0}}" href="javascript:void(0)"
+                   class="role-join-button login-auth">开通会员</a>
             </div>
         </div>
     </div>

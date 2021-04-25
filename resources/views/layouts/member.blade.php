@@ -1,86 +1,72 @@
-@extends('layouts.app')
+@extends('layouts.app-active')
 
 @section('content')
 
-    <div class="container member">
-        <div class="col-sm-3 member-left-box">
-            <div class="row">
-                <div class="col-sm-12 avatar border">
-                    <p>
-                        <a href="{{ route('member.avatar') }}">
-                            <img src="{{ $user->avatar }}" width="80" height="80">
+    <div class="member-menu-parent">
+        <div class="container-fluid member-menu">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 member-menu-box">
+                        <a href="{{route('member')}}" class="{{menu_active('member')}}">
+                            <div>
+                                <img src="/images/icons/member/profile.png" width="24" height="24">
+                                <span class="member-menu-item-title">我的资料</span>
+                            </div>
+                            <div class="dot-box">
+                                <span class="dot"></span>
+                            </div>
                         </a>
-                    </p>
-                    <p class="nickname">{{ $user->nick_name }}</p>
-                    <p class="lh-30">注册于 &nbsp; <span class="color-gray">{{ $user->created_at->diffForHumans() }}</span></p>
-                    @if($user->role)
-                    <p class="lh-30">
-                        <span class="label label-success">{{$user->role->name}} {{$user->role_expired_at}}</span>
-                    </p>
-                    @endif
-                    <p class="lh-30">余额
-                        <b>￥{{ $user->credit1 }}</b>&nbsp; <a href="{{ route('member.recharge') }}">充值</a>
-                    </p>
+                        <a href="{{route('member.courses')}}" class="{{menu_active('member.courses')}}">
+                            <div>
+                                <img src="/images/icons/member/course.png" width="24" height="24">
+                                <span class="member-menu-item-title">我的课程</span>
+                            </div>
+                            <div class="dot-box">
+                                <span class="dot"></span>
+                            </div>
+                        </a>
+                        <a href="{{route('member.orders')}}" class="{{menu_active('member.orders')}}">
+                            <div>
+                                <img src="/images/icons/member/order.png" width="24" height="24">
+                                <span class="member-menu-item-title">订单信息</span>
+                            </div>
+                            <div class="dot-box">
+                                <span class="dot"></span>
+                            </div>
+                        </a>
+                        <a href="{{route('member.promo_code')}}" class="{{menu_active('member.promo_code')}}">
+                            <div>
+                                <img src="/images/icons/member/invite.png" width="24" height="24">
+                                <span class="member-menu-item-title">我的邀请码</span>
+                            </div>
+                            <div class="dot-box">
+                                <span class="dot"></span>
+                            </div>
+                        </a>
+                        <a href="{{route('member.credit1_records')}}" class="{{menu_active('member.credit1_records')}}">
+                            <div>
+                                <img src="/images/icons/member/credit1.png" width="24" height="24">
+                                <span class="member-menu-item-title">我的积分</span>
+                            </div>
+                            <div class="dot-box">
+                                <span class="dot"></span>
+                            </div>
+                        </a>
+                        <a href="{{route('member.messages')}}" class="{{menu_active('member.messages')}}">
+                            <div>
+                                <img src="/images/icons/member/message.png" width="24" height="24">
+                                <span class="member-menu-item-title">我的消息</span>
+                            </div>
+                            <div class="dot-box">
+                                <span class="dot"></span>
+                            </div>
+                        </a>
+                    </div>
                 </div>
-
-                <div class="col-sm-12 member-left-menu border">
-                    <ul>
-                        <li>
-                            <a href="{{ route('member') }}">
-                                <i class="fa fa-dashboard"></i> 会员中心
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('member.recharge_records') }}">
-                                <i class="fa fa-credit-card"></i> 充值记录
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('member.orders') }}">
-                                <i class="fa fa-envelope-open-o"></i> 消费记录
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('member.messages') }}">
-                                <i class="fa fa-comments"></i> 我的消息
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('member.courses') }}">
-                                <i class="fa fa-file"></i> 已购课程
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('member.course.videos') }}">
-                                <i class="fa fa-film"></i> 已购视频
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('member.join_role_records') }}">
-                                <i class="fa fa-users"></i> 会员记录
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('member.password_reset') }}">
-                                <i class="fa fa-cogs"></i> 修改密码
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('logout') }}"
-                               onclick="event.preventDefault();document.getElementById('logout-form').submit();">
-                                <i class="fa fa-sign-out"></i> 安全退出
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-            </div>
-        </div>
-        <div class="col-sm-9 member-box border">
-            <div class="col-sm-12">
-                @yield('member')
             </div>
         </div>
     </div>
+
+    @yield('member')
 
 @endsection

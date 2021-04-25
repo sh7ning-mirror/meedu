@@ -1,38 +1,44 @@
 <?php
 
+/*
+ * This file is part of the Qsnh/meedu.
+ *
+ * (c) XiaoTeng <616896861@qq.com>
+ */
+
 namespace Tests\Feature\Page;
 
-use App\Models\Course;
-use App\User;
 use Carbon\Carbon;
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use App\Services\Member\Models\User;
+use App\Services\Course\Models\Course;
 
 class MemberCourseTest extends TestCase
 {
-
     public function test_member_course()
     {
         $user = factory(User::class)->create();
         $this->actingAs($user)
-            ->visit(route('member.courses'))
-            ->see('暂无数据');
+            ->visit(route('member.courses'));
     }
 
     public function test_member_course_see_some_records()
     {
-        $course = factory(Course::class)->create();
+        $course = factory(Course::class)->create([
+            'is_show' => Course::SHOW_YES,
+            'published_at' => Carbon::now()->subDays(1),
+        ]);
         $user = factory(User::class)->create();
-        $charge = mt_rand(1, 100);
-        $user->joinCourses()->attach($course, [
+        $charge = random_int(1, 100);
+        DB::table('user_course')->insert([
+            'course_id' => $course->id,
             'charge' => $charge,
             'created_at' => Carbon::now(),
+            'user_id' => $user->id,
         ]);
         $this->actingAs($user)
             ->visit(route('member.courses'))
-            ->see($course->title)
-            ->see($charge);
+            ->see($course->title);
     }
-
 }

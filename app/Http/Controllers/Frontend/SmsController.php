@@ -4,52 +4,84 @@
  * This file is part of the Qsnh/meedu.
  *
  * (c) XiaoTeng <616896861@qq.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
  */
 
 namespace App\Http\Controllers\Frontend;
 
-use App\Models\SmsRecord;
-use Overtrue\EasySms\EasySms;
+use Exception;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use App\Services\Other\Services\SmsService;
 use App\Http\Requests\Frontend\SmsSendRequest;
+use App\Services\Other\Interfaces\SmsServiceInterface;
 
 class SmsController extends FrontendController
 {
+    /**
+     * @var SmsService
+     */
+    protected $smsService;
+
+    public function __construct(SmsServiceInterface $smsService)
+    {
+        parent::__construct();
+
+        $this->smsService = $smsService;
+    }
+
     public function send(SmsSendRequest $request)
     {
         $data = $request->filldata();
-        $method = 'send'.$data['method'];
+        $method = 'send' . Str::camel($data['method']);
+        try {
+            return $this->{$method}($data['mobile']);
+        } catch (Exception $exception) {
+            exception_record($exception);
 
-        return $this->{$method}($request, $data['mobile']);
+            return $this->error(__('error'));
+        }
     }
 
-    public function sendPasswordReset($request, $mobile)
+    public function sendRegister($mobile)
     {
-        $code = mt_rand(1000, 10000);
+        return $this->sendHandler($mobile, 'sms_register', 'register');
+    }
 
-        session(['password_reset_captcha' => $code]);
+    public function sendPasswordReset($mobile)
+    {
+        return $this->sendHandler($mobile, 'sms_password_reset', 'password_reset');
+    }
 
-        $config = config('sms');
-        $easySms = new EasySms($config);
+    public function sendMobileBind($mobile)
+    {
+        return $this->sendHandler($mobile, 'sms_mobile_bind', 'mobile_bind');
+    }
 
-        try {
-            $data = [
-                'content' => "您的验证码为：{$code}",
-                'template' => $config['gateways'][$config['default']['gateways'][0]]['template']['password_reset'],
-                'data' => [
-                    'code' => $code,
-                ],
-            ];
-            $sendResponse = $easySms->send($mobile, $data);
+    public function sendMobileLogin($mobile)
+    {
+        return $this->sendHandler($mobile, 'sms_mobile_login', 'login');
+    }
 
-            // Log
-            SmsRecord::createData($mobile, $data, $sendResponse);
+    /**
+     * @param $mobile
+     * @param $sessionKey
+     * @param $templateId
+     * @return \Illuminate\Http\JsonResponse
+     * @throws Exception
+     */
+    protected function sendHandler($mobile, $sessionKey, $templateId)
+    {
+        $code = sprintf('%06d', random_int(1, 999999));
+        session([$sessionKey => $code]);
 
-            return $this->success('验证码发送成功');
-        } catch (\Exception $exception) {
-            return exception_response($exception, '验证码发送失败');
+        if (is_dev()) {
+            // 开发环境直接跳过
+            Log::info(__METHOD__, ['code' => $code]);
+            return $this->success();
         }
+
+        $this->smsService->sendCode($mobile, $code, $templateId);
+
+        return $this->success();
     }
 }

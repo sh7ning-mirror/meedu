@@ -1,65 +1,43 @@
-<p align="center"><img src="public/images/meedu.png"/></p>
-
+<p align="center"><img src="public/images/meedu.jpg"/></p>
+<p align="center">MeEdu - 开源的在线视频点播系统。</p>
 <p align="center">
 <a href="https://github.styleci.io/repos/127536154"><img src="https://github.styleci.io/repos/127536154/shield?branch=master" alt="StyleCI"></a>
 <a href="https://travis-ci.org/Qsnh/meedu"><img src="https://travis-ci.org/Qsnh/meedu.svg?branch=master" alt="Build Status"></a>
-<a href="https://packagist.org/packages/Qsnh/meedu"><img src="https://poser.pugx.org/qsnh/meedu/v/stable.svg" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/Qsnh/meedu"><img src="https://poser.pugx.org/qsnh/meedu/downloads" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/Qsnh/meedu"><img src="https://poser.pugx.org/qsnh/meedu/license" alt="License"></a>
+<a href="https://codecov.io/gh/Qsnh/meedu">
+  <img src="https://codecov.io/gh/Qsnh/meedu/branch/master/graph/badge.svg" />
+</a>
 </p>
 
-## 介绍
+## 安装方式
 
-随着知识付费领域的兴起，尤其是知识付费领域的龙头“得到”的成功，知识付费领域俨然成为了新的风口。经过这几年的发展，知识付费领域的基础建设有了很大的进步，市场上面很多知识付费的平台可以在短短几分钟之内搭建一套属于自己的知识付费应用。但是，这并不是我想要的！可能是处于程序员的角度出发，我更在乎的是这套应用是我自己可以完全控制的！所以 *MeEdu* 诞生了。*MeEdu* 寄托了我对当前知识付费领域的期望。我相信未来的每位身负技能的人都可以通过 *MeEdu* 来构建自己的知识付费应用，通过 *MeEdu* 将自己的知识进行变现。
-
-## 功能
-
-- [x] 视频点播板块
-- [x] 视频直播板块
-- [x] 手机号注册
-- [x] 视频收费
-- [x] 视频评论互动
-- [x] 课程收费
-- [x] 课程评论互动
-- [x] 会员收费
-- [x] 站内消息
-- [x] 邮件通知
-- [x] 有赞云支付系统
-- [x] 邮件订阅
-- [x] 后台系统
-- [x] 单元测试
-- [x] 系统公告
-- [x] 数据表格导出
-- [x] SEO优化
-- [x] 数据定时备份
-- [ ] 电子书板块
-- [x] FAQ
-- [ ] API接口
-- [ ] 微信小程序
-- [ ] 基于 seele 的版权保护
-- [ ] seele 区块链支付
-- [ ] 广告系统
-- [ ] 邀请推广
-- [ ] 积分系统
+- [x] 使用傻瓜安装包安装 [下载地址](https://www.yuque.com/meedu/kbanfm)
+- [x] [宝塔一键安装（适合技术能力一般的用户）](https://www.yuque.com/meedu/fvvkbf/qvb006)
+- [x] [手动安装教程（适合技术能力较强的用户）](https://www.yuque.com/meedu/fvvkbf/hhl2wk)
+- [x] MeEdu 安装服务（适合小白用户）。由 MeEdu 作者亲自帮您安装。具体查看：[MeEdu托管服务](https://meedu.vip/topic/205) 。
 
 ## FAQ
 
-- [安装教程](docs/安装教程.md)
-- [邮件配置教程](docs/邮件配置.md)
-- [有赞云支付配置教程](docs/有赞云配置.md)
-- [短信配置教程](docs/短信配置.md)
-- [视频收费规则细节](docs/收费规则.md)
-- [定时备份配置](docs/定时备份.md)
-- [模板开发细节](docs/模板开发细节.md)
-- [后端依赖介绍](docs/meedu后端依赖介绍.md)
+- [MeEdu 官网](https://meedu.vip)
+- [MeEdu 插件商城](https://meedu.vip/addons)
+- [MeEdu 功能概览](https://www.yuque.com/meedu/fvvkbf/gkg87z)
+- [MeEdu 使用手册](https://www.yuque.com/meedu/fvvkbf)
+- [MeEdu 常见问题总结](https://www.yuque.com/meedu/yr7rek)
+- [MeEdu API文档](https://meedu-v2-xiaoteng.doc.coding.io/)
 
-## License
+## 收费插件
 
-**MeEdu** 采用 MIT 开源许可证，你可以在商业项目中免费使用 **MeEdu** 或者基于 **MeEdu** 二次 开发而不必支付费用。
+| 插件 | 插件 | 插件 |
+| --- | --- | --- | 
+| [问答模块](https://meedu.vip/addons/38/Wenda) | [试题插件](https://meedu.vip/addons/36/Paper) | [团购](https://meedu.vip/addons/33/TuanGou) |
+| [秒杀](https://meedu.vip/addons/32/MiaoSha) | [阿里云HLS加密播放](https://meedu.vip/addons/30/AliyunHls) | [腾讯云HLS加密播放](https://meedu.vip/addons/27/TencentCloudHls) |
+| [学习路径](https://meedu.vip/addons/26/LearningPaths) | [图文收费](https://meedu.vip/addons/16/MeeduTopics) | [电子书模块](https://meedu.vip/addons/17/MeeduBooks) |
 
-## 交流群
+## 鸣谢
 
-<p>
-<img src="https://s1.ax1x.com/2018/09/29/ilrWvt.jpg" width=300>
-<img src="https://s1.ax1x.com/2018/09/29/ilrhKP.png" width=300>
-</p>
+感谢下面小伙伴提供支付宝和微信相关支付账号（排名不分前后）：  
+
+| 昵称 | |
+| --- | --- |
+| `Baiyuetribe` | [https://github.com/Baiyuetribe](https://github.com/Baiyuetribe) |
+| `逸企邦` | [https://easeco.cn](https://easeco.cn) |
+| `Aunger` | [https://www.aunwen.com](https://www.aunwen.com) |

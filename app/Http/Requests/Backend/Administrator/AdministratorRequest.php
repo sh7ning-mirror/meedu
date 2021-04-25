@@ -4,16 +4,14 @@
  * This file is part of the Qsnh/meedu.
  *
  * (c) XiaoTeng <616896861@qq.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
  */
 
 namespace App\Http\Requests\Backend\Administrator;
 
-use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\Backend\BaseRequest;
 
-class AdministratorRequest extends FormRequest
+class AdministratorRequest extends BaseRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -65,8 +63,13 @@ class AdministratorRequest extends FormRequest
      */
     public function filldata()
     {
-        $data = ['name' => $this->input('name', '')];
-        $this->input('password') && $data['password'] = bcrypt($this->input('password'));
+        $data = [
+            'name' => $this->input('name'),
+            'is_ban_login' => (int)$this->input('is_ban_login'),
+        ];
+
+        // 编辑
+        $this->input('password') && $data['password'] = Hash::make($this->input('password'));
         if ($this->isMethod('post')) {
             $data['email'] = $this->input('email');
         }

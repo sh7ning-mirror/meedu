@@ -4,9 +4,6 @@
  * This file is part of the Qsnh/meedu.
  *
  * (c) XiaoTeng <616896861@qq.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
  */
 
 namespace App\Models;
@@ -22,8 +19,13 @@ class AdministratorRole extends Model
     ];
 
     protected $appends = [
-        'edit_url', 'destroy_url', 'permission_url',
+        'permission_ids',
     ];
+
+    public function getPermissionIdsAttribute()
+    {
+        return $this->permissions()->select(['id'])->get()->pluck('id')->toArray();
+    }
 
     /**
      * 角色下的管理员.
@@ -55,23 +57,25 @@ class AdministratorRole extends Model
         );
     }
 
-    public function getEditUrlAttribute()
-    {
-        return route('backend.administrator_role.edit', $this);
-    }
-
-    public function getDestroyUrlAttribute()
-    {
-        return route('backend.administrator_role.destroy', $this);
-    }
-
-    public function getPermissionUrlAttribute()
-    {
-        return route('backend.administrator_role.permission', $this);
-    }
-
+    /**
+     * @param AdministratorPermission $permission
+     *
+     * @return bool
+     */
     public function hasPermission(AdministratorPermission $permission)
     {
         return $this->permissions()->where('id', $permission->id)->exists();
+    }
+
+    /**
+     * 当前角色是否属于某个用户.
+     *
+     * @param Administrator $administrator
+     *
+     * @return mixed
+     */
+    public function hasAdministrator(Administrator $administrator)
+    {
+        return $this->administrators()->whereId($administrator->id)->exists();
     }
 }

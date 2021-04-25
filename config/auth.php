@@ -1,5 +1,11 @@
 <?php
 
+/*
+ * This file is part of the Qsnh/meedu.
+ *
+ * (c) XiaoTeng <616896861@qq.com>
+ */
+
 return [
 
     /*
@@ -41,13 +47,18 @@ return [
             'provider' => 'users',
         ],
 
-        'administrator' => [
+        'backend-web' => [
             'driver' => 'session',
             'provider' => 'administrators',
         ],
 
-        'api' => [
-            'driver' => 'token',
+        'administrator' => [
+            'driver' => 'jwt',
+            'provider' => 'administrators',
+        ],
+
+        'apiv2' => [
+            'driver' => 'jwt',
             'provider' => 'users',
         ],
     ],
@@ -72,7 +83,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => App\User::class,
+            'model' => \App\Services\Member\Models\User::class,
         ],
 
         'administrators' => [

@@ -4,41 +4,35 @@
  * This file is part of the Qsnh/meedu.
  *
  * (c) XiaoTeng <616896861@qq.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
  */
 
 namespace App\Meedu\Payment\Contract;
 
-use App\Models\RechargePayment;
-
 interface Payment
 {
     /**
-     * 创建订单.
-     *
-     * @param $data
+     * @param array $order
+     * @param array $extra
+     * @return PaymentStatus
+     */
+    public function create(array $order, array $extra = []): PaymentStatus;
+
+    /**
+     * @param array $order
      *
      * @return PaymentStatus
      */
-    public function create(RechargePayment $payment): PaymentStatus;
+    public function query(array $order): PaymentStatus;
 
     /**
-     * 主动查询.
-     *
-     * @param $orderId
-     *
-     * @return PaymentStatus
-     */
-    public function query(RechargePayment $payment): PaymentStatus;
-
-    /**
-     * 回调.
-     *
-     * @param $data
-     *
-     * @return PaymentStatus
+     * @return mixed
      */
     public function callback();
+
+    /**
+     * @param array $order
+     *
+     * @return string
+     */
+    public static function payUrl(array $order): string;
 }

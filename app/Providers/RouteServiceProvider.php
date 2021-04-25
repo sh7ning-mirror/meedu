@@ -4,9 +4,6 @@
  * This file is part of the Qsnh/meedu.
  *
  * (c) XiaoTeng <616896861@qq.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
  */
 
 namespace App\Providers;
@@ -38,9 +35,10 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function map()
     {
+        $this->mapApiV2Routes();
         $this->mapApiRoutes();
-
         $this->mapWebRoutes();
+        $this->mapBackendApiRoutes();
     }
 
     /**
@@ -50,21 +48,32 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function mapWebRoutes()
     {
-        Route::middleware(['web', 'user.share'])
-             ->namespace($this->namespace)
-             ->group(base_path('routes/web.php'));
+        Route::middleware(['web', 'global.share'])
+            ->namespace('App\Http\Controllers\Frontend')
+            ->group(base_path('routes/web.php'));
     }
 
-    /**
-     * Define the "api" routes for the application.
-     *
-     * These routes are typically stateless.
-     */
+    protected function mapApiV2Routes()
+    {
+        Route::prefix('/api/v2')
+            ->middleware('api')
+            ->namespace($this->namespace . '\Api\V2')
+            ->group(base_path('routes/apiv2.php'));
+    }
+
     protected function mapApiRoutes()
     {
-        Route::prefix('api')
-             ->middleware('api')
-             ->namespace($this->namespace)
-             ->group(base_path('routes/api.php'));
+        Route::prefix('/api')
+            ->middleware('api')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/api.php'));
+    }
+
+    protected function mapBackendApiRoutes()
+    {
+        Route::prefix('/backend/api/v1')
+            ->middleware(['api'])
+            ->namespace($this->namespace . '\Backend\Api\V1')
+            ->group(base_path('routes/backend-api.php'));
     }
 }

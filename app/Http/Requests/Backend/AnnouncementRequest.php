@@ -4,16 +4,14 @@
  * This file is part of the Qsnh/meedu.
  *
  * (c) XiaoTeng <616896861@qq.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
  */
 
 namespace App\Http\Requests\Backend;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Constant\BackendApiConstant;
+use Illuminate\Support\Facades\Auth;
 
-class AnnouncementRequest extends FormRequest
+class AnnouncementRequest extends BaseRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -33,6 +31,7 @@ class AnnouncementRequest extends FormRequest
     public function rules()
     {
         return [
+            'title' => 'required',
             'announcement' => 'required',
         ];
     }
@@ -40,14 +39,17 @@ class AnnouncementRequest extends FormRequest
     public function messages()
     {
         return [
-            'announcement.required' => '请输入公告内容',
+            'title.required' => __('please input announcement title'),
+            'announcement.required' => __('please input announcement content'),
         ];
     }
 
     public function filldata()
     {
         return [
-            'announcement' => $this->input('announcement'),
+            'title' => $this->input('title'),
+            'admin_id' => Auth::guard(BackendApiConstant::GUARD)->user()->id,
+            'announcement' => clean($this->input('announcement')),
         ];
     }
 }

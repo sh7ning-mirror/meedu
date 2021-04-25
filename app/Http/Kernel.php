@@ -4,19 +4,35 @@
  * This file is part of the Qsnh/meedu.
  *
  * (c) XiaoTeng <616896861@qq.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
  */
 
 namespace App\Http;
 
-use App\Http\Middleware\UserShareMiddleware;
+use Fruitcake\Cors\HandleCors;
+use App\Http\Middleware\GlobalShareMiddleware;
+use App\Http\Middleware\CheckSmsCodeMiddleware;
+use App\Http\Middleware\MobileBindCheckMiddleware;
+use App\Http\Middleware\LoginStatusCheckMiddleware;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
-use App\Http\Middleware\AdministratorLoginCheckMiddleware;
+use App\Http\Middleware\Backend\BackendPermissionCheckMiddleware;
 
 class Kernel extends HttpKernel
 {
+    /**
+     * The bootstrap classes for the application.
+     *
+     * @var array
+     */
+    protected $bootstrappers = [
+        \Illuminate\Foundation\Bootstrap\LoadEnvironmentVariables::class,
+        \Illuminate\Foundation\Bootstrap\LoadConfiguration::class,
+        \Illuminate\Foundation\Bootstrap\HandleExceptions::class,
+        \Illuminate\Foundation\Bootstrap\RegisterFacades::class,
+        \Illuminate\Foundation\Bootstrap\RegisterProviders::class,
+        \App\Meedu\AddonsProvider::class,
+        \Illuminate\Foundation\Bootstrap\BootProviders::class,
+    ];
+
     /**
      * The application's global HTTP middleware stack.
      *
@@ -30,6 +46,7 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\TrimStrings::class,
 //        \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         \App\Http\Middleware\TrustProxies::class,
+        HandleCors::class,
     ];
 
     /**
@@ -49,7 +66,7 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            'throttle:60,1',
+            'throttle:120,1',
             'bindings',
         ],
     ];
@@ -69,7 +86,17 @@ class Kernel extends HttpKernel
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
 
-        'backend.login.check' => AdministratorLoginCheckMiddleware::class,
-        'user.share' => UserShareMiddleware::class,
+        // global变量共享
+        'global.share' => GlobalShareMiddleware::class,
+        // 短信验证
+        'sms.check' => CheckSmsCodeMiddleware::class,
+        // 后台权限
+        'backend.permission' => BackendPermissionCheckMiddleware::class,
+        // 登录状态检测
+        'login.status.check' => LoginStatusCheckMiddleware::class,
+        // api接口的状态登录检测
+        'api.login.status.check' => \App\Http\Middleware\Api\LoginStatusCheckMiddleware::class,
+        // 手机号绑定检测
+        'mobile.bind.check' => MobileBindCheckMiddleware::class,
     ];
 }

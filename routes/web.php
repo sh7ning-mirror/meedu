@@ -1,177 +1,159 @@
 <?php
 
 /*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
+ * This file is part of the Qsnh/meedu.
+ *
+ * (c) XiaoTeng <616896861@qq.com>
+ */
 
-Route::get('/', 'Frontend\IndexController@index')->name('index');
+Route::get('/', 'IndexController@index')->name('index');
+Route::get('/user/protocol', 'IndexController@userProtocol')->name('user.protocol');
+Route::get('/user/private_protocol', 'IndexController@userPrivateProtocol')->name('user.private_protocol');
+Route::get('/aboutus', 'IndexController@aboutus')->name('aboutus');
+// 登录
+Route::get('/login', 'LoginController@showLoginPage')->name('login');
+Route::post('/login', 'LoginController@passwordLoginHandler')->middleware(['throttle:30,1']);
+// 微信公众号扫码登录
+Route::get('/login/wechat/scan', 'LoginController@wechatScanLogin')->name('login.wechat.scan');
+Route::get('/login/wechat/scan/query', 'LoginController@wechatScanLoginQuery')->name('login.wechat.scan.query');
+// 微信公众号授权登录
+Route::get('/login/wechat/oauth', 'LoginController@wechatLogin')->name('login.wechat.oauth');
+Route::get('/login/wechat/oauth/callback', 'LoginController@wechatLoginCallback')->name('login.wechat.oauth.callback');
+// 社交登录
+Route::get('/login/{app}', 'LoginController@socialLogin')->name('socialite');
+Route::get('/login/{app}/callback', 'LoginController@socialiteLoginCallback')->name('socialite.callback');
+// 注册
+Route::get('/register', 'RegisterController@showRegisterPage')->name('register');
+Route::post('/register', 'RegisterController@passwordRegisterHandler')->middleware(['sms.check', 'throttle:30,1']);
+// 找回密码
+Route::get('/password/reset', 'ForgotPasswordController@showPage')->name('password.request');
+Route::post('/password/reset', 'ForgotPasswordController@handler')->middleware(['throttle:10,1', 'sms.check']);
 
-Auth::routes();
-Route::get('/password/reset', 'Auth\ForgotPasswordController@showPage')->name('password.request');
-Route::post('/password/reset', 'Auth\ForgotPasswordController@handler');
-Route::post('/sms/send', 'Frontend\SmsController@send')->name('sms.send');
+// 发送短信
+Route::post('/sms/send', 'SmsController@send')->name('sms.send');
 
-Route::get('/courses', 'Frontend\CourseController@index')->name('courses');
-Route::get('/course/{id}/{slug}', 'Frontend\CourseController@show')->name('course.show');
-Route::get('/course/{course_id}/video/{id}/{slug}', 'Frontend\VideoController@show')->name('video.show');
+// 课程列表
+Route::get('/courses', 'CourseController@index')->name('courses');
+// 视频列表
+Route::get('/videos', 'VideoController@index')->name('videos');
+// 课程详情
+Route::get('/course/{id}/{slug}', 'CourseController@show')->name('course.show');
+Route::get('/course/attach/{id}/download', 'CourseController@attachDownload')->name('course.attach.download')->middleware(['auth']);
+// 视频详情
+Route::get('/course/{course_id}/video/{id}/{slug}', 'VideoController@show')->name('video.show');
+// 搜索
+Route::get('/search', 'SearchController@searchHandler')->name('search');
 
-Route::post('/subscription/email', 'Frontend\IndexController@subscriptionHandler')->name('subscription.email');
-
-Route::get('/vip', 'Frontend\RoleController@index')->name('role.index');
-
-Route::get('/faq', 'Frontend\FaqController@index')->name('faq');
-Route::get('/faq/category/{id}', 'Frontend\FaqController@showCategoryPage')->name('faq.category.show');
-Route::get('/faq/article/{id}', 'Frontend\FaqController@showArticlePage')->name('faq.article.show');
-
+// VIP
+Route::get('/vip', 'RoleController@index')->name('role.index');
 // 支付回调
-Route::post('/payment/callback', 'Frontend\PaymentController@callback')->name('payment.callback');
+Route::post('/payment/callback/{payment}', 'PaymentController@callback')->name('payment.callback');
+
+// 公告
+Route::get('/announcement/{id}', 'AnnouncementController@show')->name('announcement.show');
+
+// 微信JSAPI支付
+Route::get('/member/order/pay/wechat/jsapi/page', 'OrderController@wechatJSAPI')->name('order.pay.wechat.jsapi');
+// 手动打款支付
+Route::get('/member/order/pay/handPay', 'OrderController@handPay')->name('order.pay.handPay');
 
 Route::group([
     'prefix' => '/member',
-    'middleware' => ['auth'],
-    'namespace' => 'Frontend'
+    'middleware' => ['auth', 'login.status.check', 'mobile.bind.check'],
 ], function () {
+    // 用户首页
     Route::get('/', 'MemberController@index')->name('member');
 
+    // 安全退出
+    Route::post('/logout', 'MemberController@logout')->name('logout');
+
+    // 手机号绑定
+    Route::get('/mobile/bind', 'MemberController@showMobileBindPage')->name('member.mobile.bind');
+    Route::post('/mobile/bind', 'MemberController@mobileBindHandler')->name('member.mobile.bind.submit')->middleware('sms.check');
+
+    // 密码重置
     Route::get('/password_reset', 'MemberController@showPasswordResetPage')->name('member.password_reset');
     Route::post('/password_reset', 'MemberController@passwordResetHandler');
+
+    // 头像更换
     Route::get('/avatar', 'MemberController@showAvatarChangePage')->name('member.avatar');
     Route::post('/avatar', 'MemberController@avatarChangeHandler');
+
+    // VIP会员购买记录
     Route::get('/join_role_records', 'MemberController@showJoinRoleRecordsPage')->name('member.join_role_records');
+
+    // 我的消息
     Route::get('/messages', 'MemberController@showMessagesPage')->name('member.messages');
+
+    // 我的点播课程
     Route::get('/courses', 'MemberController@showBuyCoursePage')->name('member.courses');
+
+    // 我的点播视频
     Route::get('/course/videos', 'MemberController@showBuyVideoPage')->name('member.course.videos');
+
+    // 我的订单
     Route::get('/orders', 'MemberController@showOrdersPage')->name('member.orders');
 
-    Route::post('/course/{id}/comment', 'CourseController@commentHandler')->name('course.comment');
-    Route::post('/video/{id}/comment', 'VideoController@commentHandler')->name('video.comment');
+    // 社交登录
+    Route::get('/socialite', 'MemberController@showSocialitePage')->name('member.socialite');
+    Route::get('/socialite/{app}/bind', 'MemberController@socialiteBind')->name('member.socialite.bind');
+    Route::get('/socialite/{app}/bind/callback', 'MemberController@socialiteBindCallback')->name('member.socialite.bind.callback');
+    Route::post('/socialite/{app}/delete', 'MemberController@cancelBindSocialite')->name('member.socialite.delete');
 
+    // 邀请码
+    Route::get('/promo_code', 'MemberController@showPromoCodePage')->name('member.promo_code');
+    Route::post('/promo_code', 'MemberController@generatePromoCode');
+    Route::post('/invite_balance_withdraw_orders', 'MemberController@createInviteBalanceWithdrawOrder');
+    Route::get('/credit1_records', 'MemberController@credit1Records')->name('member.credit1_records');
+
+    // 我的资料
+    Route::get('/profile', 'MemberController@showProfilePage')->name('member.profile');
+
+    // 图片上传
     Route::post('/upload/image', 'UploadController@imageHandler')->name('upload.image');
 
-    Route::get('/recharge', 'PaymentController@index')->name('member.recharge');
-    Route::post('/recharge', 'PaymentController@rechargeHandler');
-    Route::get('/recharge/records', 'MemberController@showRechargeRecordsPage')->name('member.recharge_records');
-
+    // 购买课程
     Route::get('/course/{id}/buy', 'CourseController@showBuyPage')->name('member.course.buy');
     Route::post('/course/{id}/buy', 'CourseController@buyHandler');
 
+    // 购买视频
     Route::get('/video/{id}/buy', 'VideoController@showBuyPage')->name('member.video.buy');
     Route::post('/video/{id}/buy', 'VideoController@buyHandler');
 
+    // 购买VIP
     Route::get('/vip/{id}/buy', 'RoleController@showBuyPage')->name('member.role.buy');
     Route::post('/vip/{id}/buy', 'RoleController@buyHandler');
+
+    // 支付成功界面
+    Route::get('/order/pay/success', 'OrderController@paySuccess')->name('order.pay.success');
+    // 发起支付
+    Route::get('/order/pay', 'OrderController@pay')->name('order.pay');
+    // 微信PC扫码支付
+    Route::get('/order/pay/wechat/{order_id}/scan', 'OrderController@wechatScan')->name('order.pay.wechat');
+
+    Route::group(['prefix' => 'ajax'], function () {
+        Route::post('/course/{id}/comment', 'AjaxController@courseCommentHandler')->name('ajax.course.comment');
+        Route::post('/video/{id}/comment', 'AjaxController@videoCommentHandler')->name('ajax.video.comment');
+        Route::post('/video/{id}/watch/record', 'AjaxController@recordVideo')->name('ajax.video.watch.record');
+        Route::post('/promoCodeCheck', 'AjaxController@promoCodeCheck')->name('ajax.promo_code.check');
+
+        Route::post('/password/change', 'AjaxController@changePassword')->name('ajax.password.change');
+        Route::post('/avatar/change', 'AjaxController@changeAvatar')->name('ajax.avatar.change');
+        Route::post('/nickname/change', 'AjaxController@changeNickname')->name('ajax.nickname.change');
+        Route::post('/message/read', 'AjaxController@notificationMarkAsRead')->name('ajax.message.read');
+        Route::post('/inviteBalanceWithdraw', 'AjaxController@inviteBalanceWithdraw')->name('ajax.invite_balance.withdraw');
+        Route::post('/course/like/{id}', 'AjaxController@likeACourse')->name('ajax.course.like');
+
+        // 用户资料编辑
+        Route::post('/member/profile', 'AjaxController@profileUpdate')->name('ajax.member.profile.update');
+    });
 });
 
-// 后台登录
-Route::get('/backend/login', 'Backend\AdministratorController@showLoginForm')->name('backend.login');
-Route::post('/backend/login', 'Backend\AdministratorController@loginHandle');
-Route::get('/backend/logout', 'Backend\AdministratorController@logoutHandle')->name('backend.logout');
-// 修改密码
-Route::get('/backend/edit/password', 'Backend\AdministratorController@showEditPasswordForm')->name('backend.edit.password');
-Route::put('/backend/edit/password', 'Backend\AdministratorController@editPasswordHandle');
-
-Route::group(['prefix' => 'backend', 'namespace' => 'Backend', 'middleware' => ['backend.login.check']], function () {
-    // 主面板
-    Route::get('/dashboard', 'DashboardController@index')->name('backend.dashboard.index');
-    // 管理员
-    Route::get('/administrator', 'AdministratorController@index')->name('backend.administrator.index');
-    Route::get('/administrator/create', 'AdministratorController@create')->name('backend.administrator.create');
-    Route::post('/administrator/create', 'AdministratorController@store');
-    Route::get('/administrator/{id}/edit', 'AdministratorController@edit')->name('backend.administrator.edit');
-    Route::put('/administrator/{id}/edit', 'AdministratorController@update');
-    Route::get('/administrator/{id}/destroy', 'AdministratorController@destroy')->name('backend.administrator.destroy');
-    // 角色
-    Route::get('/administrator_role', 'AdministratorRoleController@index')->name('backend.administrator_role.index');
-    Route::get('/administrator_role/create', 'AdministratorRoleController@create')->name('backend.administrator_role.create');
-    Route::post('/administrator_role/create', 'AdministratorRoleController@store');
-    Route::get('/administrator_role/{id}/edit', 'AdministratorRoleController@edit')->name('backend.administrator_role.edit');
-    Route::put('/administrator_role/{id}/edit', 'AdministratorRoleController@update');
-    Route::get('/administrator_role/{id}/destroy', 'AdministratorRoleController@destroy')->name('backend.administrator_role.destroy');
-    Route::get('/administrator_role/{id}/permission', 'AdministratorRoleController@showSelectPermissionPage')->name('backend.administrator_role.permission');
-    Route::post('/administrator_role/{id}/permission', 'AdministratorRoleController@handlePermissionSave');
-    // 权限
-    Route::get('/administrator_permission', 'AdministratorPermissionController@index')->name('backend.administrator_permission.index');
-    Route::get('/administrator_permission/create', 'AdministratorPermissionController@create')->name('backend.administrator_permission.create');
-    Route::post('/administrator_permission/create', 'AdministratorPermissionController@store');
-    Route::get('/administrator_permission/{id}/edit', 'AdministratorPermissionController@edit')->name('backend.administrator_permission.edit');
-    Route::put('/administrator_permission/{id}/edit', 'AdministratorPermissionController@update');
-    Route::get('/administrator_permission/{id}/destroy', 'AdministratorPermissionController@destroy')->name('backend.administrator_permission.destroy');
-
-    // 课程
-    Route::get('/course', 'CourseController@index')->name('backend.course.index');
-    Route::get('/course/create', 'CourseController@create')->name('backend.course.create');
-    Route::post('/course/create', 'CourseController@store');
-    Route::get('/course/{id}/edit', 'CourseController@edit')->name('backend.course.edit');
-    Route::put('/course/{id}/edit', 'CourseController@update');
-    Route::get('/course/{id}/delete', 'CourseController@destroy')->name('backend.course.destroy');
-    // 视频
-    Route::get('/video', 'CourseVideoController@index')->name('backend.video.index');
-    Route::get('/video/create', 'CourseVideoController@create')->name('backend.video.create');
-    Route::post('/video/create', 'CourseVideoController@store');
-    Route::get('/video/{id}/edit', 'CourseVideoController@edit')->name('backend.video.edit');
-    Route::put('/video/{id}/edit', 'CourseVideoController@update');
-    Route::get('/video/{id}/delete', 'CourseVideoController@destroy')->name('backend.video.destroy');
-
-    // 充值
-    Route::get('/recharge', 'RechargeController@index')->name('backend.recharge');
-    Route::get('/recharge/export', 'RechargeController@exportToExcel')->name('backend.recharge.export');
-
-    // 会员
-    Route::get('/member', 'MemberController@index')->name('backend.member.index');
-    Route::get('/member/{id}', 'MemberController@show')->name('backend.member.show');
-
-    // 公告
-    Route::get('/announcement', 'AnnouncementController@index')->name('backend.announcement.index');
-    Route::get('/announcement/create', 'AnnouncementController@create')->name('backend.announcement.create');
-    Route::post('/announcement/create', 'AnnouncementController@store');
-    Route::get('/announcement/{id}/edit', 'AnnouncementController@edit')->name('backend.announcement.edit');
-    Route::put('/announcement/{id}/edit', 'AnnouncementController@update');
-    Route::get('/announcement/{id}/delete', 'AnnouncementController@destroy')->name('backend.announcement.destroy');
-
-    // 用户角色
-    Route::get('/role', 'RoleController@index')->name('backend.role.index');
-    Route::get('/role/create', 'RoleController@create')->name('backend.role.create');
-    Route::post('/role/create', 'RoleController@store');
-    Route::get('/role/{id}/edit', 'RoleController@edit')->name('backend.role.edit');
-    Route::put('/role/{id}/edit', 'RoleController@update');
-    Route::get('/role/{id}/delete', 'RoleController@destroy')->name('backend.role.destroy');
-
-    // 邮件群发
-    Route::get('/subscription_email', 'SubscriptionController@create')->name('backend.subscription.email');
-    Route::post('/subscription_email', 'SubscriptionController@store');
-
-    // 配置
-    Route::get('/setting', 'SettingController@index')->name('backend.setting.index');
-    Route::post('/setting', 'SettingController@saveHandler');
-
-    // FAQ分类
-    Route::get('/faq/category', 'FaqCategoryController@index')->name('backend.faq.category.index');
-    Route::get('/faq/category/create', 'FaqCategoryController@create')->name('backend.faq.category.create');
-    Route::post('/faq/category/create', 'FaqCategoryController@store');
-    Route::get('/faq/category/{id}/edit', 'FaqCategoryController@edit')->name('backend.faq.category.edit');
-    Route::put('/faq/category/{id}/edit', 'FaqCategoryController@update');
-    Route::get('/faq/category/{id}/delete', 'FaqCategoryController@destroy')->name('backend.faq.category.destroy');
-
-    // FAQ文章
-    Route::get('/faq/article', 'FaqArticleController@index')->name('backend.faq.article.index');
-    Route::get('/faq/article/create', 'FaqArticleController@create')->name('backend.faq.article.create');
-    Route::post('/faq/article/create', 'FaqArticleController@store');
-    Route::get('/faq/article/{id}/edit', 'FaqArticleController@edit')->name('backend.faq.article.edit');
-    Route::put('/faq/article/{id}/edit', 'FaqArticleController@update');
-    Route::get('/faq/article/{id}/delete', 'FaqArticleController@destroy')->name('backend.faq.article.destroy');
-
-    // 图片上传
-    Route::post('/upload/image', 'UploadController@uploadImageHandle')->name('backend.upload.image');
-
-    // Ajax
-    Route::group(['prefix' => 'ajax', 'namespace' => 'Ajax'], function () {
-        Route::get('/course', 'CourseController@index')->name('backend.ajax.course.index');
-    });
+// Auth Ajax
+Route::group(['prefix' => 'ajax'], function () {
+    Route::post('/auth/login/password', 'AjaxController@passwordLogin')->name('ajax.login.password');
+    Route::post('/auth/login/mobile', 'AjaxController@mobileLogin')->name('ajax.login.mobile')->middleware(['sms.check']);
+    Route::post('/auth/register', 'AjaxController@register')->name('ajax.register')->middleware(['sms.check']);
+    Route::post('/auth/password/reset', 'AjaxController@passwordReset')->name('ajax.password.reset')->middleware(['sms.check']);
+    Route::post('/auth/mobile/bind', 'AjaxController@mobileBind')->name('ajax.mobile.bind')->middleware(['sms.check', 'auth']);
 });

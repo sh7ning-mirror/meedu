@@ -1,16 +1,19 @@
 <?php
 
+/*
+ * This file is part of the Qsnh/meedu.
+ *
+ * (c) XiaoTeng <616896861@qq.com>
+ */
+
 namespace Tests\Feature\Page;
 
-use App\Models\Video;
 use Carbon\Carbon;
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Services\Course\Models\Video;
 
 class VideoPlayTest extends TestCase
 {
-
     public function test_visit()
     {
         $video = factory(Video::class)->create([
@@ -40,5 +43,4 @@ class VideoPlayTest extends TestCase
         $response = $this->get(route('video.show', [$video->course, $video->id, $video->slug]));
         $response->assertResponseStatus(404);
     }
-
 }

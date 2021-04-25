@@ -2,45 +2,48 @@
 
 @section('content')
 
-    <div class="container-fluid">
+    <div class="container">
         <div class="row">
-            <div class="col-sm-12 course-index-banner">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <h3>全部课程</h3>
-                        </div>
+            <div class="col-12">
+                <div class="course-menu-box">
+                    <div class="menu-item {{!$scene ? 'active' : ''}}">
+                        <a href="{{route('courses')}}?{{query_builder(['category_id'], ['scene' => '', 'page' => 1])}}">所有课程</a>
+                    </div>
+                    <div class="menu-item {{$scene == 'free' ? 'active' : ''}}">
+                        <a href="{{route('courses')}}?{{query_builder(['category_id'], ['scene' => 'free', 'page' => 1])}}">免费课程</a>
+                    </div>
+                    <div class="menu-item {{$scene == 'recom' ? 'active' : ''}}">
+                        <a href="{{route('courses')}}?{{query_builder(['category_id'], ['scene' => 'recom', 'page' => 1])}}">推荐课程</a>
+                    </div>
+                    <div class="menu-item {{$scene == 'sub' ? 'active' : ''}}">
+                        <a href="{{route('courses')}}?{{query_builder(['category_id'], ['scene' => 'sub', 'page' => 1])}}">订阅最多</a>
                     </div>
                 </div>
+
+                <div class="category-box">
+                    <a href="{{route('courses')}}?{{query_builder(['scene'], ['category_id' => 0, 'page' => 1])}}"
+                       class="category-box-item {{!$categoryId ? 'active' : ''}}">不限</a>
+                    @foreach($courseCategories as $category)
+                        <a href="{{route('courses')}}?{{query_builder(['scene'], ['category_id' => $category['id'], 'page' => 1])}}"
+                           class="category-box-item {{$categoryId == $category['id'] ? 'active' : ''}}">{{$category['name']}}</a>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="course-list-box">
+                    @foreach($courses as $index => $course)
+                        @include('frontend.components.course-item', ['course' => $course, 'class' => (($index + 1) % 4 == 0) ? 'last' : ''])
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="col-12">
+                {!! str_replace('pagination', 'pagination justify-content-center', $courses->render()) !!}
             </div>
         </div>
     </div>
 
-    <div class="container course-index-box">
-        <div class="row">
-            @foreach($courses as $course)
-            <div class="col-sm-4 course-item">
-                <a href="{{ route('course.show', ['id' => $course->id, 'slug' => $course->slug]) }}">
-                    <div class="course-item-box border">
-                        <p class="thumb">
-                            <img data-echo="{{ $course->thumb }}" src="/images/loading.png" width="100%" height="300" alt="">
-                        </p>
-                        <p class="title">
-                            {{$course->title}}
-                        </p>
-                        <p class="intro">
-                            <span>最后更新时间 {{$course->created_at->diffForHumans()}}</span>
-                        </p>
-                    </div>
-                </a>
-            </div>
-            @endforeach
-
-            <div class="col-sm-12 text-center">
-                {{$courses->render()}}
-            </div>
-
-        </div>
-    </div>
+    @include('frontend.components.recom_courses')
 
 @endsection

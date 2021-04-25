@@ -1,10 +1,9 @@
 <?php
 
-/**
- * Laravel - A PHP Framework For Web Artisans
+/*
+ * This file is part of the Qsnh/meedu.
  *
- * @package  Laravel
- * @author   Taylor Otwell <taylor@laravel.com>
+ * (c) XiaoTeng <616896861@qq.com>
  */
 
 $uri = urldecode(
