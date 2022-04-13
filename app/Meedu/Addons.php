@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Meedu;
@@ -194,5 +194,16 @@ class Addons
                 app()->register($service);
             }
         }
+    }
+
+    public function enabledAddons()
+    {
+        $maps = $this->getProvidersMap();
+        $data = [];
+        foreach ($maps as $item) {
+            $tmp = explode('\\', $item);
+            $data[] = $tmp[2];
+        }
+        return $data;
     }
 }

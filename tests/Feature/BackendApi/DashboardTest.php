@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace Tests\Feature\BackendApi;
@@ -15,14 +15,14 @@ class DashboardTest extends Base
 {
     public function test_dashboard()
     {
-        $admin = factory(Administrator::class)->create();
+        $admin = Administrator::factory()->create();
         $response = $this->user($admin)->get(self::API_V1_PREFIX . '/dashboard');
         $this->assertResponseSuccess($response);
     }
 
     public function test_system_info()
     {
-        $admin = factory(Administrator::class)->create();
+        $admin = Administrator::factory()->create();
         $response = $this->user($admin)->get(self::API_V1_PREFIX . '/dashboard/system/info');
         $data = $this->assertResponseSuccess($response);
         $this->assertEquals(PHP_VERSION, $data['data']['php_version']);

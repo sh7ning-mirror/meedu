@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 use Illuminate\Support\Facades\Schema;
@@ -25,6 +25,8 @@ class CreateSmsRecordsTable extends Migration
             $table->text('send_data')->nullable(true)->comment('发送数据');
             $table->text('response_data')->nullable(true)->comment('响应数据');
             $table->timestamps();
+
+            $table->engine = 'InnoDB';
         });
     }
 

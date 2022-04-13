@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 use Illuminate\Support\Facades\Schema;
@@ -24,6 +24,8 @@ class CreateUserVideoTable extends Migration
             $table->integer('video_id');
             $table->integer('charge')->default(0)->comment('收费');
             $table->timestamp('created_at')->default(null)->nullable(true);
+
+            $table->engine = 'InnoDB';
         });
     }
 

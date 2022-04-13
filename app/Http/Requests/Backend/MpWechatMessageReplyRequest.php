@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Requests\Backend;
@@ -21,8 +21,8 @@ class MpWechatMessageReplyRequest extends BaseRequest
     public function messages()
     {
         return [
-            'type.required' => '请选择消息类型',
-            'reply_content.required' => '请输入回复内容',
+            'type.required' => __('请选择消息类型'),
+            'reply_content.required' => __('请输入回复内容'),
         ];
     }
 

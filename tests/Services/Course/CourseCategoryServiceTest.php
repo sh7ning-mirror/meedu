@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace Tests\Services\Course;
@@ -20,7 +20,7 @@ class CourseCategoryServiceTest extends TestCase
      */
     protected $service;
 
-    public function setUp():void
+    public function setUp(): void
     {
         parent::setUp();
         $this->service = $this->app->make(CourseCategoryServiceInterface::class);
@@ -28,8 +28,10 @@ class CourseCategoryServiceTest extends TestCase
 
     public function test_all()
     {
-        factory(CourseCategory::class, 10)->create();
+        CourseCategory::factory()->count(9)->create();
+        CourseCategory::factory()->count(9)->create(['parent_id' => 1]);
+
         $res = $this->service->all();
-        $this->assertEquals(10, count($res));
+        $this->assertEquals(9, count($res));
     }
 }

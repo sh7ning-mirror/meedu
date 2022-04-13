@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Middleware\Backend;
@@ -31,7 +31,7 @@ class BackendPermissionCheckMiddleware
 
         // 超级管理员
         $admin = Auth::guard(BackendApiConstant::GUARD)->user();
-        if ($admin->is_super) {
+        if ((int)$admin['is_super'] === 1) {
             return $next($request);
         }
 
@@ -42,7 +42,7 @@ class BackendPermissionCheckMiddleware
 
         return response()->json([
             'status' => 403,
-            'message' => '无权限',
+            'message' => __('无权限'),
         ]);
     }
 }

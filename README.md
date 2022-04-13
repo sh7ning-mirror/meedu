@@ -1,43 +1,62 @@
-<p align="center"><img src="public/images/meedu.jpg"/></p>
-<p align="center">MeEdu - 开源的在线视频点播系统。</p>
-<p align="center">
-<a href="https://github.styleci.io/repos/127536154"><img src="https://github.styleci.io/repos/127536154/shield?branch=master" alt="StyleCI"></a>
-<a href="https://travis-ci.org/Qsnh/meedu"><img src="https://travis-ci.org/Qsnh/meedu.svg?branch=master" alt="Build Status"></a>
-<a href="https://codecov.io/gh/Qsnh/meedu">
-  <img src="https://codecov.io/gh/Qsnh/meedu/branch/master/graph/badge.svg" />
-</a>
-</p>
+## MeEdu 开源版本
 
-## 安装方式
+本仓库为 MeEdu 开源版本，只支持**录播课**的课程形式，更多功能请参考下文的付费方案介绍。
 
-- [x] 使用傻瓜安装包安装 [下载地址](https://www.yuque.com/meedu/kbanfm)
-- [x] [宝塔一键安装（适合技术能力一般的用户）](https://www.yuque.com/meedu/fvvkbf/qvb006)
-- [x] [手动安装教程（适合技术能力较强的用户）](https://www.yuque.com/meedu/fvvkbf/hhl2wk)
-- [x] MeEdu 安装服务（适合小白用户）。由 MeEdu 作者亲自帮您安装。具体查看：[MeEdu托管服务](https://meedu.vip/topic/205) 。
+* [MeEdu 官网](https://meedu.vip)
+* [MeEdu 开源版本使用须知](https://www.yuque.com/meedu/fvvkbf/amfw7z)
+* [MeEdu 功能概览](https://www.yuque.com/meedu/fvvkbf/gpx5ed)
+* [MeEdu 使用手册](https://www.yuque.com/meedu/fvvkbf)
 
-## FAQ
+### 依赖项目
 
-- [MeEdu 官网](https://meedu.vip)
-- [MeEdu 插件商城](https://meedu.vip/addons)
-- [MeEdu 功能概览](https://www.yuque.com/meedu/fvvkbf/gkg87z)
-- [MeEdu 使用手册](https://www.yuque.com/meedu/fvvkbf)
-- [MeEdu 常见问题总结](https://www.yuque.com/meedu/yr7rek)
-- [MeEdu API文档](https://meedu-v2-xiaoteng.doc.coding.io/)
++ [MeEdu 后台界面程序](https://github.com/meedu/backend-v2)
++ [MeEdu PC端界面程序](https://github.com/meedu/pc-v1)
++ [MeEdu H5端界面程序](https://github.com/meedu/h5-v1)
 
-## 收费插件
+## MeEdu 教培系统付费方案介绍
 
-| 插件 | 插件 | 插件 |
-| --- | --- | --- | 
-| [问答模块](https://meedu.vip/addons/38/Wenda) | [试题插件](https://meedu.vip/addons/36/Paper) | [团购](https://meedu.vip/addons/33/TuanGou) |
-| [秒杀](https://meedu.vip/addons/32/MiaoSha) | [阿里云HLS加密播放](https://meedu.vip/addons/30/AliyunHls) | [腾讯云HLS加密播放](https://meedu.vip/addons/27/TencentCloudHls) |
-| [学习路径](https://meedu.vip/addons/26/LearningPaths) | [图文收费](https://meedu.vip/addons/16/MeeduTopics) | [电子书模块](https://meedu.vip/addons/17/MeeduBooks) |
+![](https://meedu.cloud.oss.meedu.vip/github/1.jpg)
 
-## 鸣谢
+### 项目介绍
 
-感谢下面小伙伴提供支付宝和微信相关支付账号（排名不分前后）：  
+MeEdu 教培系统付费方案支持录播，直播，考试练习，图文，电子书多种课程类型。支持秒杀，团购，三级分销等营销方式。端口覆盖PC网校、H5网校（微信公众号）、微信小程序、安卓APP、苹果APP。MeEdu 付费方案支持源码交付以便于客户二次开发。
+  
+* [MeEdu 付费方案系统演示](https://meedu.vip/cases.html)  
+* [MeEdu 付费方案PPT下载](https://www.yuque.com/meedu/fvvkbf/fhaxpe)
+  
+  
+![](https://meedu.cloud.oss.meedu.vip/github/2.jpeg)
 
-| 昵称 | |
-| --- | --- |
-| `Baiyuetribe` | [https://github.com/Baiyuetribe](https://github.com/Baiyuetribe) |
-| `逸企邦` | [https://easeco.cn](https://easeco.cn) |
-| `Aunger` | [https://www.aunwen.com](https://www.aunwen.com) |
+![](https://meedu.cloud.oss.meedu.vip/github/3.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/4.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/5.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/6.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/7.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/8.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/9.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/10.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/11.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/12.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/13.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/14.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/15.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/16.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/17.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/18.jpeg)
+
+![](https://meedu.cloud.oss.meedu.vip/github/19.jpeg)

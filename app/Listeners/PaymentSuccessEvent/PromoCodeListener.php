@@ -3,13 +3,12 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Listeners\PaymentSuccessEvent;
 
 use App\Businesses\BusinessState;
-use App\Constant\FrontendConstant;
 use App\Events\PaymentSuccessEvent;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -105,22 +104,23 @@ class PromoCodeListener implements ShouldQueue
         }
 
         $orderUser = $this->userService->find($order['user_id']);
-        if ($orderUser['invite_user_id'] === 0) {
+        if ($code['user_id'] && $orderUser['invite_user_id'] === 0) {
             // 当前用户使用了优惠码，且没有上级
-            // 那么将该优惠码的注册设置为当前用户的上级
+            // 那么将该优惠码的所属用户设置为当前用户的上级
             $this->userService->updateInviteUserId($orderUser['id'], $code['user_id'], $code['invite_user_reward']);
 
-            // 邀请积分奖励
             if ($credit1 = $this->configService->getInviteSceneCredit1()) {
-                $message = __(FrontendConstant::CREDIT1_REMARK_WATCHED_INVITE);
+                $message = sprintf(__('邀请用户注册送%d积分'), $credit1);
+                // 积分奖励
                 $this->creditService->createCredit1Record($code['user_id'], $credit1, $message);
+                // 积分到账通知
                 $this->notificationService->notifyCredit1Message($code['user_id'], $credit1, $message);
             }
         }
 
         // 记录用户使用invite_promo_code的状态
         // 每个用户只能只能使用一次其它用户的邀请码
-        if ($orderUser['is_used_promo_code'] !== FrontendConstant::YES) {
+        if ((int)$orderUser['is_used_promo_code'] !== 1) {
             $this->userService->setUsedPromoCode($orderUser['id']);
         }
     }

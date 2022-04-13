@@ -3,15 +3,18 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Services\Order\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class OrderGoods extends Model
 {
+    use HasFactory;
+
     const GOODS_TYPE_COURSE = 'COURSE';
     const GOODS_TYPE_VIDEO = 'VIDEO';
     const GOODS_TYPE_ROLE = 'ROLE';

@@ -3,12 +3,11 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace Tests\Services\Course;
 
-use Carbon\Carbon;
 use Tests\TestCase;
 use App\Services\Member\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -42,9 +41,9 @@ class CourseCommentServiceTest extends TestCase
 
     public function test_create()
     {
-        $user = factory(User::class)->create();
+        $user = User::factory()->create();
         Auth::login($user);
-        $course = factory(Course::class)->create();
+        $course = Course::factory()->create();
 
         $comment = $this->service->create($course->id, '我是评价的内容');
 
@@ -52,29 +51,10 @@ class CourseCommentServiceTest extends TestCase
         $this->assertEquals($user->id, $comment['user_id']);
     }
 
-    public function test_create_with_at()
-    {
-        $user = factory(User::class)->create();
-        $user1 = factory(User::class)->create();
-        Auth::login($user);
-        $course = factory(Course::class)->create([
-            'is_show' => Course::SHOW_YES,
-            'published_at' => Carbon::now()->subDays(1),
-        ]);
-
-        $content = '我是@' . $user1->nick_name . ' 评价的内容';
-        $comment = $this->service->create($course->id, $content);
-
-        $this->assertEquals($content, $comment['original_content']);
-        $this->assertEquals($user->id, $comment['user_id']);
-
-        $this->assertEquals(1, $this->notificationService->getUserUnreadCount($user1->id));
-    }
-
     public function test_courseComments()
     {
-        $course = factory(Course::class)->create();
-        $comments = factory(CourseComment::class, 10)->create([
+        $course = Course::factory()->create();
+        $comments = CourseComment::factory()->count(10)->create([
             'course_id' => $course,
             'user_id' => 1,
         ]);
@@ -92,7 +72,7 @@ class CourseCommentServiceTest extends TestCase
 
     public function test_find()
     {
-        $comment = factory(CourseComment::class)->create();
+        $comment = CourseComment::factory()->create();
         $c = $this->service->find($comment->id);
         $this->assertEquals($comment->original_content, $c['original_content']);
     }

@@ -3,7 +3,7 @@
 $header = <<<EOF
 This file is part of the Qsnh/meedu.
 
-(c) XiaoTeng <616896861@qq.com>
+(c) 杭州白书科技有限公司
 EOF;
 
 return PhpCsFixer\Config::create()
@@ -30,15 +30,11 @@ return PhpCsFixer\Config::create()
     ->setFinder(
         PhpCsFixer\Finder::create()
             ->exclude('addons')
-            ->exclude('docker')
-            ->exclude('docs')
-            ->exclude('library')
-            ->exclude('node_modules')
             ->exclude('public')
             ->exclude('resources')
             ->exclude('storage')
-            ->exclude('templates')
             ->exclude('vendor')
+            ->exclude('bootstrap')
             ->in(__DIR__)
     )
     ->setUsingCache(false);

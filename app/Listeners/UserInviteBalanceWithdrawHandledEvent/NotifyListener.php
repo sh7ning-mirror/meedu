@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Listeners\UserInviteBalanceWithdrawHandledEvent;
@@ -57,8 +57,8 @@ class NotifyListener implements ShouldQueue
         }
         $orders = $this->inviteBalanceService->getOrdersList($withdrawOrderIds);
         $statusMap = [
-            FrontendConstant::INVITE_BALANCE_WITHDRAW_STATUS_SUCCESS => __('success'),
-            FrontendConstant::INVITE_BALANCE_WITHDRAW_STATUS_FAILURE => __('error'),
+            FrontendConstant::INVITE_BALANCE_WITHDRAW_STATUS_SUCCESS => __('成功'),
+            FrontendConstant::INVITE_BALANCE_WITHDRAW_STATUS_FAILURE => __('失败'),
         ];
         foreach ($orders as $order) {
             $this->notificationService->notifyInviteBalanceWithdrawHandledMessage($order['user_id'], $statusMap[$order['status']] ?? '');

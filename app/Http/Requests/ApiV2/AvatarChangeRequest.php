@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Requests\ApiV2;
@@ -20,9 +20,9 @@ class AvatarChangeRequest extends BaseRequest
     public function messages()
     {
         return [
-            'file.required' => __('file.required'),
-            'file.image' => __('file.image'),
-            'file.max' => __('file.max', ['size' => '1M']),
+            'file.required' => __('请上传文件'),
+            'file.image' => __('请上传图片文件'),
+            'file.max' => __('文件不能超过:size', ['size' => '1M']),
         ];
     }
 

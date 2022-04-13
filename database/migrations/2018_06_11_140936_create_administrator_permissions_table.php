@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 use Illuminate\Support\Facades\Schema;
@@ -27,6 +27,8 @@ class CreateAdministratorPermissionsTable extends Migration
             $table->string('method')->comment('HTTP动作');
             $table->string('url')->comment('URL');
             $table->timestamps();
+
+            $table->engine = 'InnoDB';
         });
     }
 

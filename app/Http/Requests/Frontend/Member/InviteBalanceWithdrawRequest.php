@@ -3,34 +3,19 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Requests\Frontend\Member;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\Frontend\BaseRequest;
 
-class InviteBalanceWithdrawRequest extends FormRequest
+class InviteBalanceWithdrawRequest extends BaseRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize()
-    {
-        return true;
-    }
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules()
     {
         return [
-            'total' => 'required|integer',
+            'total' => 'required',
             'channel' => 'required|array',
             'channel.name' => 'required',
             'channel.username' => 'required',
@@ -41,13 +26,12 @@ class InviteBalanceWithdrawRequest extends FormRequest
     public function messages()
     {
         return [
-            'total.required' => __('please input withdraw money'),
-            'total.integer' => __('withdraw money must be integer'),
-            'channel.required' => __('please input withdraw info'),
-            'channel.array' => __('please input withdraw info'),
-            'channel.name.required' => __('please select withdraw channel'),
-            'channel.username.required' => __('please input withdraw username'),
-            'channel.account.required' => __('please input withdraw account'),
+            'total.required' => __('请输入提现金额'),
+            'channel.required' => __('请输入提现账户信息'),
+            'channel.array' => __('请输入提现账户信息'),
+            'channel.name.required' => __('请输入提现支付渠道'),
+            'channel.username.required' => __('请输入提现支付渠道姓名'),
+            'channel.account.required' => __('请输入提现支付渠道账号'),
         ];
     }
 

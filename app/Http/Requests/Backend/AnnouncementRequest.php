@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Requests\Backend;
@@ -39,8 +39,8 @@ class AnnouncementRequest extends BaseRequest
     public function messages()
     {
         return [
-            'title.required' => __('please input announcement title'),
-            'announcement.required' => __('please input announcement content'),
+            'title.required' => __('请输入公告标题'),
+            'announcement.required' => __('请输入公告内容'),
         ];
     }
 

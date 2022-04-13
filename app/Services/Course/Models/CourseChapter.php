@@ -3,13 +3,17 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Services\Course\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class CourseChapter extends Base
 {
+    use HasFactory;
+
     protected $table = 'course_chapter';
 
     protected $fillable = [

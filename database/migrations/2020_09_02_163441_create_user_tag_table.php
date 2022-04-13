@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 use Illuminate\Support\Facades\Schema;
@@ -22,6 +22,8 @@ class CreateUserTagTable extends Migration
         Schema::create('user_tag', function (Blueprint $table) {
             $table->bigInteger('user_id');
             $table->bigInteger('tag_id');
+
+            $table->engine = 'InnoDB';
         });
     }
 

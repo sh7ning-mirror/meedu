@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Requests\Frontend\Member;
@@ -16,6 +16,13 @@ class ReadAMessageRequest extends BaseRequest
     {
         return [
             'id' => 'required',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'id.required' => __('参数错误'),
         ];
     }
 

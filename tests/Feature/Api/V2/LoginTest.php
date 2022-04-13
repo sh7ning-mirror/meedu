@@ -3,12 +3,11 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace Tests\Feature\Api\V2;
 
-use App\Constant\ApiV2Constant;
 use App\Constant\CacheConstant;
 use App\Services\Member\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +18,7 @@ class LoginTest extends Base
 {
     public function test_with_correct_password()
     {
-        $user = factory(User::class)->create([
+        $user = User::factory()->create([
             'mobile' => '13890900909',
             'is_lock' => User::LOCK_NO,
         ]);
@@ -32,7 +31,7 @@ class LoginTest extends Base
 
     public function test_with_locked()
     {
-        $user = factory(User::class)->create([
+        $user = User::factory()->create([
             'mobile' => '13890900909',
             'password' => Hash::make('123123'),
             'is_lock' => User::LOCK_YES,
@@ -41,12 +40,12 @@ class LoginTest extends Base
             'mobile' => $user->mobile,
             'password' => '123123',
         ]);
-        $this->assertResponseError($response, __(ApiV2Constant::MEMBER_HAS_LOCKED));
+        $this->assertResponseError($response, __('账号已被锁定'));
     }
 
     public function test_with_error_password()
     {
-        $user = factory(User::class)->create([
+        $user = User::factory()->create([
             'mobile' => '13890900909',
             'is_lock' => User::LOCK_NO,
         ]);
@@ -54,13 +53,14 @@ class LoginTest extends Base
             'mobile' => $user->mobile,
             'password' => 'asd12312',
         ]);
-        $this->assertResponseError($response, __(ApiV2Constant::MOBILE_OR_PASSWORD_ERROR));
+        $this->assertResponseError($response, __('手机号或密码错误'));
     }
 
     public function test_mobile_login()
     {
         $mobile = '13890900909';
-        $user = factory(User::class)->create([
+
+        User::factory()->create([
             'mobile' => $mobile,
             'is_lock' => User::LOCK_NO,
         ]);
@@ -73,7 +73,7 @@ class LoginTest extends Base
         $cacheService->put($key, '123456', 100);
 
         $response = $this->postJson('/api/v2/login/mobile', [
-            'mobile' => $user->mobile,
+            'mobile' => $mobile,
             'mobile_code' => '123456',
         ]);
         $this->assertResponseSuccess($response);

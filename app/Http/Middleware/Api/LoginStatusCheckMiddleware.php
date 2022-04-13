@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Middleware\Api;
@@ -50,25 +50,25 @@ class LoginStatusCheckMiddleware
         $user = Auth::guard($guard)->user();
 
         $rule = $this->configService->getLoginLimitRule();
-        if ($rule === FrontendConstant::LOGIN_LIMIT_RULE_PLATFORM || $rule === FrontendConstant::LOGIN_LIMIT_RULE_ALL) {
-            $lastLoginAt = Auth::guard($guard)->payload()['last_login_at'] ?? '';
+        if ($rule === FrontendConstant::LOGIN_LIMIT_RULE_ALL) {
+            $lastLoginAt = Auth::guard($guard)->payload()[FrontendConstant::USER_LOGIN_AT_COOKIE_NAME] ?? '';
             if (!$lastLoginAt) {
+                // 当前token中没有最后登录时间 -> 主动退出登录
                 Auth::guard($guard)->logout();
-                return $this->error(__('please login again'), 401);
+                return $this->error(__('请重新登录'), 401);
             }
 
-            $platform = $rule === FrontendConstant::LOGIN_LIMIT_RULE_PLATFORM ? get_platform() : '';
-            $userLastLoginRecord = $this->userService->findUserLastLoginRecord($user['id'], $platform);
+            $userLastLoginRecord = $this->userService->findUserLastLoginRecord($user['id'], '');
             if (!$userLastLoginRecord) {
-                // 登录记录不存在
+                // 当前用户没有登录记录 -> 主动退出
                 Auth::guard($guard)->logout();
-                return $this->error(__('please login again'), 401);
+                return $this->error(__('请重新登录'), 401);
             }
 
             if ($lastLoginAt != strtotime($userLastLoginRecord['at'])) {
                 // 最近一次登录时间不等
                 Auth::guard($guard)->logout();
-                return $this->error(__('please login again'), 401);
+                return $this->error(__('请重新登录'), 401);
             }
         }
         return $next($request);

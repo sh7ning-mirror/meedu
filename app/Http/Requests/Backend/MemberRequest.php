@@ -3,11 +3,12 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Requests\Backend;
 
+use Carbon\Carbon;
 use App\Services\Member\Models\User;
 use Illuminate\Support\Facades\Hash;
 
@@ -41,17 +42,20 @@ class MemberRequest extends BaseRequest
     public function messages()
     {
         return [
-            'avatar.required' => '请上传头像',
-            'nick_name.required' => '请输入昵称',
-            'nick_name.unique' => '昵称已经存在',
-            'mobile.required' => '请输入手机号',
-            'mobile.unique' => '手机号已经存在',
-            'password.required' => '请输入密码',
+            'avatar.required' => __('请上传头像'),
+            'nick_name.required' => __('请输入昵称'),
+            'nick_name.unique' => __('昵称已经存在'),
+            'mobile.required' => __('请输入手机号'),
+            'mobile.unique' => __('手机号已存在'),
+            'password.required' => __('请输入密码'),
         ];
     }
 
     public function filldata()
     {
+        $roleExpiredAt = $this->input('role_expired_at') ?: null;
+        $roleExpiredAt && $roleExpiredAt = Carbon::parse($roleExpiredAt)->toDateTimeLocalString();
+
         return [
             'avatar' => $this->post('avatar'),
             'nick_name' => $this->post('nick_name'),
@@ -59,7 +63,7 @@ class MemberRequest extends BaseRequest
             'password' => Hash::make($this->post('password')),
             'is_active' => User::ACTIVE_YES,
             'role_id' => (int)$this->input('role_id'),
-            'role_expired_at' => $this->input('role_expired_at') ?: null,
+            'role_expired_at' => $roleExpiredAt,
         ];
     }
 }

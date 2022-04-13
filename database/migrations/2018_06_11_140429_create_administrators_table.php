@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 use Illuminate\Support\Facades\Schema;
@@ -28,6 +28,8 @@ class CreateAdministratorsTable extends Migration
             $table->timestamp('last_login_date')->nullable(true)->comment('最后登录时间');
             $table->rememberToken();
             $table->timestamps();
+
+            $table->engine = 'InnoDB';
         });
     }
 

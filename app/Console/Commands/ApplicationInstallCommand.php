@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Console\Commands;
@@ -13,51 +13,29 @@ use Illuminate\Console\Command;
 use Illuminate\Database\Seeder;
 use App\Models\AdministratorRole;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Artisan;
+use Database\Seeders\AppConfigSeeder;
+use Database\Seeders\AdministratorMenuSeeder;
+use Database\Seeders\AdministratorSuperSeeder;
+use Database\Seeders\AdministratorPermissionSeeder;
 
 class ApplicationInstallCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'install {action} {--q}';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Application install tools.';
+    protected $description = 'MeEdu程序安装命令';
 
-    /**
-     * Create a new command instance.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
     public function handle()
     {
         $action = $this->argument('action');
         if (!$action) {
-            $this->warn('Please choice action.');
-
-            return;
+            $this->warn('缺少action参数');
+            return 0;
         }
 
         $method = 'action' . implode('', array_map('ucfirst', explode('_', $action)));
         if (!method_exists($this, $method)) {
-            $this->warn('action not exists.');
-
-            return;
+            $this->warn('action不存在');
+            return 0;
         }
 
         return $this->{$method}();
@@ -65,11 +43,11 @@ class ApplicationInstallCommand extends Command
 
     public function actionAdministrator()
     {
-        $super = AdministratorRole::whereSlug(config('meedu.administrator.super_slug'))->first();
+        $super = AdministratorRole::query()->where('slug', config('meedu.administrator.super_slug'))->first();
         if (!$super) {
-            $this->warn('请先运行 [ php artisan install role ] 命令来初始化meedu的管理员权限数据。');
+            $this->warn('请先运行 [ php artisan install role ] 命令来初始化meedu的管理员权限数据');
 
-            return;
+            return 0;
         }
 
         // 是否静默安装
@@ -79,13 +57,13 @@ class ApplicationInstallCommand extends Command
             if (!$email) {
                 $this->warn('邮箱不能空');
 
-                return;
+                return 0;
             }
-            $emailExists = Administrator::whereEmail($email)->exists();
+            $emailExists = Administrator::query()->where('email', $email)->exists();
             if ($emailExists) {
                 $this->warn('邮箱已经存在');
 
-                return;
+                return 0;
             }
 
             $password = '';
@@ -99,9 +77,9 @@ class ApplicationInstallCommand extends Command
             }
 
             if ($passwordRepeat !== $password) {
-                $this->warn('两次输入密码不一致.');
+                $this->warn('两次输入密码不一致');
 
-                return;
+                return 0;
             }
         } else {
             $name = '超级管理员';
@@ -117,13 +95,9 @@ class ApplicationInstallCommand extends Command
         $administrator->save();
         $administrator->roles()->attach($super->id);
 
-        $this->info('管理员初始化成功.');
-    }
+        $this->info('管理员初始化成功');
 
-    public function actionDev()
-    {
-        Artisan::call('migrate');
-        Artisan::call('db:seed');
+        return 0;
     }
 
     // 系统权限生成
@@ -131,19 +105,23 @@ class ApplicationInstallCommand extends Command
     {
         $seeder = new class() extends Seeder {
         };
-        $seeder->call(\AdministratorSuperSeeder::class);
-        $seeder->call(\AdministratorPermissionSeeder::class);
-        $seeder->call(\AdministratorMenuSeeder::class);
+        $seeder->call(AdministratorSuperSeeder::class);
+        $seeder->call(AdministratorPermissionSeeder::class);
+        $seeder->call(AdministratorMenuSeeder::class);
 
         $this->info('数据初始化成功');
+
+        return 0;
     }
 
     public function actionConfig()
     {
         $seeder = new class() extends Seeder {
         };
-        $seeder->call(\AppConfigSeeder::class);
+        $seeder->call(AppConfigSeeder::class);
 
         $this->info('配置初始化完成');
+
+        return 0;
     }
 }

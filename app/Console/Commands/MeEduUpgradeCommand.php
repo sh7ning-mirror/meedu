@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Console\Commands;
@@ -26,7 +26,7 @@ class MeEduUpgradeCommand extends Command
      *
      * @var string
      */
-    protected $description = 'meedu升级命令';
+    protected $description = 'MeEdu升级处理命令';
 
     /**
      * Create a new command instance.
@@ -69,6 +69,10 @@ class MeEduUpgradeCommand extends Command
         $this->info('清除配置缓存...');
         Artisan::call('config:clear');
 
-        $this->info('升级成功');
+        // 清空视图缓存
+        $this->info('清除视图缓存...');
+        Artisan::call('view:clear');
+
+        return 0;
     }
 }

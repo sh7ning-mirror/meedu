@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Exceptions;
@@ -20,8 +20,6 @@ class ServiceException extends \Exception
         if (request()->wantsJson()) {
             return $this->error($message);
         }
-        flash($message);
-
         return back();
     }
 }

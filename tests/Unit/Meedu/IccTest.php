@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace Tests\Unit\Meedu;
@@ -19,7 +19,7 @@ class IccTest extends TestCase
 {
     public function test_AdFromIncItem()
     {
-        $adFrom = factory(AdFrom::class)->create();
+        $adFrom = AdFrom::factory()->create();
         $incItem = new AdFromIncItem($adFrom->toArray());
         $incItem->setLimit(2);
         $this->assertEquals(2, $incItem->getLimit());

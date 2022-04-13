@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Controllers\Api\V2;
@@ -13,6 +13,7 @@ use App\Meedu\Cache\Inc\Inc;
 use Illuminate\Http\Request;
 use App\Constant\ApiV2Constant;
 use App\Businesses\BusinessState;
+use App\Constant\FrontendConstant;
 use App\Meedu\Cache\Inc\VideoViewIncItem;
 use App\Http\Requests\ApiV2\CommentRequest;
 use App\Services\Base\Services\ConfigService;
@@ -24,29 +25,11 @@ use App\Services\Course\Services\VideoCommentService;
 use App\Services\Base\Interfaces\ConfigServiceInterface;
 use App\Services\Member\Interfaces\UserServiceInterface;
 use App\Services\Order\Interfaces\OrderServiceInterface;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Services\Course\Interfaces\VideoServiceInterface;
 use App\Services\Course\Interfaces\CourseServiceInterface;
 use App\Services\Course\Interfaces\VideoCommentServiceInterface;
 
-/**
- * @OpenApi\Annotations\Schemas(
- *     @OA\Schema(
- *         schema="PlayUrlItem",
- *         type="object",
- *         title="视频播放地址",
- *         @OA\Property(property="url",type="string",description="视频播放地址"),
- *         @OA\Property(property="format",type="string",description="视频格式"),
- *         @OA\Property(property="duration",type="integer",description="时长，秒"),
- *         @OA\Property(property="name",type="string",description="码率"),
- *     ),
- * )
- */
-
-/**
- * Class VideoController
- * @package App\Http\Controllers\Api\V2
- *
- */
 class VideoController extends BaseController
 {
 
@@ -98,31 +81,31 @@ class VideoController extends BaseController
     }
 
     /**
-     * @OA\Get(
-     *     path="/videos",
-     *     summary="视频列表",
-     *     tags={"视频"},
-     *     @OA\Parameter(in="query",name="page",description="页码",required=false,@OA\Schema(type="integer")),
-     *     @OA\Parameter(in="query",name="page_size",description="每页数量",required=false,@OA\Schema(type="integer")),
-     *     @OA\Response(
-     *         description="",response=200,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="code",type="integer",description="状态码"),
-     *             @OA\Property(property="message",type="string",description="消息"),
-     *             @OA\Property(property="data",type="object",description="",
-     *                 @OA\Property(property="total",type="integer",description="总数"),
-     *                 @OA\Property(property="data",type="array",description="数据列表",@OA\Items(ref="#/components/schemas/Video")),
-     *             ),
-     *         )
-     *     )
-     * )
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @api {get} /api/v2/videos 录播视频列表
+     * @apiGroup 录播课
+     * @apiVersion v2.0.0
+     *
+     * @apiSuccess {Number} code 0成功,非0失败
+     * @apiSuccess {Object} data
+     * @apiSuccess {Number} data.total 总数
+     * @apiSuccess {Object[]} data.data
+     * @apiSuccess {Number} data.data.id 视频ID
+     * @apiSuccess {String} data.data.title 视频名
+     * @apiSuccess {Number} data.data.charge 视频价格
+     * @apiSuccess {Number} data.data.view_num 观看数[已废弃]
+     * @apiSuccess {String} data.data.short_description 简短介绍
+     * @apiSuccess {String} data.data.render_desc 详细介绍[已废弃]
+     * @apiSuccess {String} data.data.published_at 上架时间
+     * @apiSuccess {Number} data.data.duration 时长[单位：秒]
+     * @apiSuccess {String} data.data.seo_keywords SEO关键字
+     * @apiSuccess {String} data.data.seo_description SEO描述
+     * @apiSuccess {Number} data.data.is_ban_sell 禁止出售[1:是,0否]
+     * @apiSuccess {Number} data.data.chapter_id 章节ID
      */
     public function paginate(Request $request)
     {
         $page = $request->input('page', 1);
-        $pageSize = $request->input('page_size', $this->configService->getVideoListPageSize());
+        $pageSize = $request->input('page_size', 10);
         [
             'list' => $list,
             'total' => $total
@@ -134,28 +117,67 @@ class VideoController extends BaseController
     }
 
     /**
-     * @OA\Get(
-     *     path="/video/{id}",
-     *     @OA\Parameter(in="path",name="id",description="视频id",required=true,@OA\Schema(type="integer")),
-     *     summary="视频信息",
-     *     tags={"视频"},
-     *     @OA\Response(
-     *         description="",response=200,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="code",type="integer",description="状态码"),
-     *             @OA\Property(property="message",type="string",description="消息"),
-     *             @OA\Property(property="data",type="object",description="",
-     *                 @OA\Property(property="video",type="object",description="视频详情",ref="#/components/schemas/Video"),
-     *                 @OA\Property(property="chapters",type="array",description="课程章节",@OA\Items(ref="#/components/schemas/CourseChapter")),
-     *                 @OA\Property(property="videos",type="array",description="视频列表",@OA\Items(ref="#/components/schemas/Video")),
-     *                 @OA\Property(property="course",type="object",description="课程",ref="#/components/schemas/Course"),
-     *                 @OA\Property(property="is_watch",type="boolean",description="是否可以观看"),
-     *             ),
-     *         )
-     *     )
-     * )
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse
+     * @api {get} /api/v2//video/{id} 录播视频详情
+     * @apiGroup 录播课
+     * @apiVersion v2.0.0
+     *
+     * @apiSuccess {Number} code 0成功,非0失败
+     * @apiSuccess {Object} data
+     * @apiSuccess {Object} data.video
+     * @apiSuccess {Number} data.video.id 视频ID
+     * @apiSuccess {String} data.video.title 视频名
+     * @apiSuccess {Number} data.video.charge 视频价格
+     * @apiSuccess {Number} data.video.view_num 观看次数
+     * @apiSuccess {String} data.video.short_description 简短介绍
+     * @apiSuccess {String} data.video.published_at 上架时间
+     * @apiSuccess {Number} data.video.duration 时长[单位：秒]
+     * @apiSuccess {String} data.video.seo_keywords SEO关键字
+     * @apiSuccess {String} data.video.seo_description SEO描述
+     * @apiSuccess {Number} data.video.is_ban_sell 禁止出售[1:是,0否]
+     * @apiSuccess {Number} data.video.ban_drag 禁止拖拽播放[1:是,0否]
+     * @apiSuccess {Number} data.video.chapter_id 章节ID
+     * @apiSuccess {Object[]} data.videos
+     * @apiSuccess {Number} data.videos.id 视频ID
+     * @apiSuccess {String} data.videos.title 视频名
+     * @apiSuccess {Number} data.videos.charge 视频价格
+     * @apiSuccess {Number} data.videos.view_num 观看数[已废弃]
+     * @apiSuccess {String} data.videos.short_description 简短介绍
+     * @apiSuccess {String} data.videos.render_desc 详细介绍[已废弃]
+     * @apiSuccess {String} data.videos.published_at 上架时间
+     * @apiSuccess {Number} data.videos.duration 时长[单位：秒]
+     * @apiSuccess {String} data.videos.seo_keywords SEO关键字
+     * @apiSuccess {String} data.videos.seo_description SEO描述
+     * @apiSuccess {Number} data.videos.is_ban_sell 禁止出售[1:是,0否]
+     * @apiSuccess {Number} data.videos.ban_drag 禁止拖拽播放[1:是,0否]
+     * @apiSuccess {Number} data.videos.chapter_id 章节ID
+     * @apiSuccess {Object} data.course 课程
+     * @apiSuccess {Number} data.course.id 课程ID
+     * @apiSuccess {String} data.course.title 课程名
+     * @apiSuccess {String} data.course.thumb 封面
+     * @apiSuccess {Number} data.course.charge 价格
+     * @apiSuccess {String} data.course.short_description 简短介绍
+     * @apiSuccess {String} data.course.render_desc 详细介绍
+     * @apiSuccess {String} data.course.seo_keywords SEO关键字
+     * @apiSuccess {String} data.course.seo_description SEO描述
+     * @apiSuccess {String} data.course.published_at 上架时间
+     * @apiSuccess {Number} data.course.is_rec 推荐[1:是,0否][已弃用]
+     * @apiSuccess {Number} data.course.user_count 订阅人数
+     * @apiSuccess {Number} data.course.videos_count 视频数
+     * @apiSuccess {Object} data.course.category 分类
+     * @apiSuccess {Number} data.course.category.id 分类ID
+     * @apiSuccess {String} data.course.category.name 分类名
+     * @apiSuccess {Object[]} data.chapters 章节
+     * @apiSuccess {Number} data.chapters.id 章节ID
+     * @apiSuccess {String} data.chapters.name 章节名
+     * @apiSuccess {Number} data.is_watch 是否可以观看[1:是,0否]
+     * @apiSuccess {Object} data.videoWatchedProgress 视频进度
+     * @apiSuccess {Number} data.videoWatchedProgress.id 记录ID
+     * @apiSuccess {Number} data.videoWatchedProgress.user_id 用户ID
+     * @apiSuccess {Number} data.videoWatchedProgress.course_id 课程ID
+     * @apiSuccess {Number} data.videoWatchedProgress.video_id 视频ID
+     * @apiSuccess {Number} data.videoWatchedProgress.watch_seconds 已观看秒数
+     * @apiSuccess {String} data.videoWatchedProgress.watched_at 看完时间
+     * @apiSuccess {Number[]} data.buy_videos 已购视频ID
      */
     public function detail($id)
     {
@@ -180,6 +202,9 @@ class VideoController extends BaseController
         // 课程视频观看进度
         $videoWatchedProgress = [];
 
+        // 已购视频
+        $buyVideos = [];
+
         if ($this->check()) {
             $isWatch = $this->businessState->canSeeVideo($this->user(), $course, $video);
             // 记录观看人数
@@ -188,6 +213,17 @@ class VideoController extends BaseController
             // 当前用户视频观看进度记录
             $userVideoWatchRecords = $this->userService->getUserVideoWatchRecords($this->id(), $course['id']);
             $videoWatchedProgress = array_column($userVideoWatchRecords, null, 'video_id');
+
+            // 已购视频
+            $videoIds = [];
+            foreach ($videos as $childrenItem) {
+                foreach ($childrenItem as $videoItem) {
+                    $videoIds[] = $videoItem['id'];
+                }
+            }
+            if ($videoIds) {
+                $buyVideos = $this->userService->getUserBuyVideosIn($this->id(), $videoIds);
+            }
         }
 
         $course = arr1_clear($course, ApiV2Constant::MODEL_COURSE_FIELD);
@@ -200,36 +236,26 @@ class VideoController extends BaseController
             'course' => $course,
             'is_watch' => $isWatch,
             'video_watched_progress' => $videoWatchedProgress,
+            'buy_videos' => $buyVideos,
         ]);
     }
 
     /**
-     * @OA\Post(
-     *     path="/video/{id}/comment",
-     *     @OA\Parameter(in="path",name="id",description="视频id",required=true,@OA\Schema(type="integer")),
-     *     summary="视频评论",
-     *     tags={"视频"},
-     *     @OA\RequestBody(description="",@OA\JsonContent(
-     *         @OA\Property(property="content",description="评论内容",type="string"),
-     *     )),
-     *     @OA\Response(
-     *         description="",response=200,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="code",type="integer",description="状态码"),
-     *             @OA\Property(property="message",type="string",description="消息"),
-     *             @OA\Property(property="data",type="object",description=""),
-     *         )
-     *     )
-     * )
-     * @param CommentRequest $request
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse
+     * @api {post} /api/v2/video/{id}/comment 录播视频评论
+     * @apiGroup 录播课
+     * @apiVersion v2.0.0
+     * @apiHeader Authorization Bearer+空格+token
+     *
+     * @apiParam {String} content 评论内容
+     *
+     * @apiSuccess {Number} code 0成功,非0失败
+     * @apiSuccess {Object} data 数据
      */
     public function createComment(CommentRequest $request, $id)
     {
         $video = $this->videoService->find($id);
         if ($this->businessState->videoCanComment($this->user(), $video) === false) {
-            return $this->error(__('video cant comment'));
+            return $this->error(__('视频无法评论'));
         }
         ['content' => $content] = $request->filldata();
         $this->videoCommentService->create($id, $content);
@@ -237,27 +263,26 @@ class VideoController extends BaseController
     }
 
     /**
-     * @OA\Get(
-     *     path="/video/{id}/comments",
-     *     @OA\Parameter(in="path",name="id",description="视频id",required=true,@OA\Schema(type="integer")),
-     *     @OA\Parameter(in="query",name="page",description="页码",required=false,@OA\Schema(type="integer")),
-     *     @OA\Parameter(in="query",name="page_size",description="每页数量",required=false,@OA\Schema(type="integer")),
-     *     summary="视频评论列表",
-     *     tags={"视频"},
-     *     @OA\Response(
-     *         description="",response=200,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="code",type="integer",description="状态码"),
-     *             @OA\Property(property="message",type="string",description="消息"),
-     *             @OA\Property(property="data",type="object",description="",
-     *                 @OA\Property(property="comments",type="array",description="评论",@OA\Items(ref="#/components/schemas/VideoComment")),
-     *                 @OA\Property(property="users",type="array",description="评论用户",@OA\Items(ref="#/components/schemas/User")),
-     *             ),
-     *         )
-     *     )
-     * )
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse
+     * @api {get} /api/v2/video/{video_id}/comments 录播视频评论列表
+     * @apiGroup 录播课
+     * @apiVersion v2.0.0
+     *
+     * @apiParam {Number} [page] 页码
+     * @apiParam {Number} [page_size] 每页条数
+     *
+     * @apiSuccess {Number} code 0成功,非0失败
+     * @apiSuccess {Object} data 数据
+     * @apiSuccess {Object[]} data.comments 评论
+     * @apiSuccess {Number} data.comments.id 评论ID
+     * @apiSuccess {Number} data.comments.id 评论ID
+     * @apiSuccess {Number} data.comments.user_id 用户ID
+     * @apiSuccess {String} data.comments.render_content 评论内容
+     * @apiSuccess {String} data.comments.created_at 时间
+     * @apiSuccess {Object[]} data.users 用户
+     * @apiSuccess {Number} data.users.id 用户ID
+     * @apiSuccess {String} data.users.nick_name 用户昵称
+     * @apiSuccess {String} data.users.avatar 用户头像
+     * @apiSuccess {String} data.users.mobile 用户手机号
      */
     public function comments($id)
     {
@@ -274,75 +299,110 @@ class VideoController extends BaseController
     }
 
     /**
-     * @OA\Get(
-     *     path="/video/{id}/playinfo",
-     *     @OA\Parameter(in="path",name="id",description="视频id",required=true,@OA\Schema(type="integer")),
-     *      @OA\Parameter(in="query",name="is_try",description="试看",required=false,@OA\Schema(type="integer")),
-     *     summary="视频播放地址",
-     *     tags={"视频"},
-     *     @OA\Response(
-     *         description="",response=200,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="code",type="integer",description="状态码"),
-     *             @OA\Property(property="message",type="string",description="消息"),
-     *             @OA\Property(property="data",type="object",description="",
-     *                 @OA\Property(property="urls",type="array",description="播放地址",@OA\Items(ref="#/components/schemas/PlayUrlItem")),
-     *             ),
-     *         )
-     *     )
-     * )
-     * @param Request $request
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse
+     * @api {get} /api/v2/video/{id}/playinfo 录播视频播放地址
+     * @apiGroup 录播课
+     * @apiVersion v2.0.0
+     * @apiHeader Authorization Bearer+空格+token
+     *
+     * @apiParam {Number} is_try 是否试看[1:是,0否]
+     *
+     * @apiSuccess {Number} code 0成功,非0失败
+     * @apiSuccess {Object} data 数据
+     * @apiSuccess {String} data.url 播放URL
+     * @apiSuccess {String} data.format 视频格式
+     * @apiSuccess {Number} data.duration 时长,单位:秒
+     * @apiSuccess {String} data.name 清晰度
      */
     public function playInfo(Request $request, $id)
     {
-        $isTry = $request->has('is_try');
+        $isTry = (int)$request->has('is_try');
 
         $video = $this->videoService->find($id);
         $course = $this->courseService->find($video['course_id']);
-        if (!$this->businessState->canSeeVideo($this->user(), $course, $video)) {
-            return $this->error(__(ApiV2Constant::VIDEO_NO_AUTH));
+
+        // 如果视频未配置试看秒数那么是无法试看的
+        $video['free_seconds'] <= 0 && $isTry = false;
+
+        // 当前用户是否可以观看视频
+        $canSee = $this->businessState->canSeeVideo($this->user(), $course, $video);
+
+        // 如果用户可以观看视频就无需试看
+        $canSee && $isTry = false;
+
+        // 无法观看且也没有配置试看 => 将无法观看
+        if ($canSee === false && !$isTry) {
+            return $this->error(__('请购买后观看'));
         }
 
         $urls = get_play_url($video, $isTry);
-
         if (!$urls) {
-            return $this->error(__('error'));
+            return $this->error(__('错误'));
         }
 
         return $this->data(compact('urls'));
     }
 
     /**
-     * @OA\Post(
-     *     path="/video/{id}/record",
-     *     @OA\Parameter(in="path",name="id",description="视频id",required=true,@OA\Schema(type="integer")),
-     *     summary="视频观看时长记录",
-     *     tags={"视频"},
-     *     @OA\RequestBody(description="",@OA\JsonContent(
-     *         @OA\Property(property="duration",description="时长",type="integer"),
-     *     )),
-     *     @OA\Response(
-     *         description="",response=200,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="code",type="integer",description="状态码"),
-     *             @OA\Property(property="message",type="string",description="消息"),
-     *             @OA\Property(property="data",type="object",description=""),
-     *         )
-     *     )
-     * )
+     * @api {post} /api/v2/video/{id}/record 视频观看时长记录
+     * @apiGroup 录播课
+     * @apiVersion v2.0.0
+     * @apiHeader Authorization Bearer+空格+token
+     *
+     * @apiParam {Number} duration 已观看时长,单位：秒
+     *
+     * @apiSuccess {Number} code 0成功,非0失败
+     * @apiSuccess {Object} data 数据
      */
     public function recordVideo(Request $request, VideoBus $videoBus, $id)
     {
         // 视频已观看时长
         $duration = (int)$request->post('duration', 0);
         if (!$duration) {
-            return $this->error(__('params error'));
+            return $this->error(__('参数错误'));
         }
 
         $videoBus->userVideoWatchDurationRecord($this->id(), (int)$id, $duration);
 
         return $this->success();
+    }
+
+    /**
+     * @api {get} /api/v2/video/open/play 公共视频播放
+     * @apiGroup 录播课
+     * @apiVersion v2.0.0
+     *
+     * @apiParam {String} file_id 视频文件ID
+     * @apiParam {String} service 视频文件存储服务
+     *
+     * @apiSuccess {Number} code 0成功,非0失败
+     * @apiSuccess {Object} data 数据
+     * @apiSuccess {String} data.url 播放URL
+     * @apiSuccess {String} data.format 视频格式
+     * @apiSuccess {Number} data.duration 时长,单位:秒
+     * @apiSuccess {String} data.name 清晰度
+     */
+    public function openPlay(Request $request)
+    {
+        $fileId = $request->input('file_id');
+        $service = $request->input('service');
+
+        if (!$fileId || !$service) {
+            return $this->error(__('参数错误'));
+        }
+
+        $mediaVideo = $this->videoService->findOpenVideo($fileId, $service);
+        throw_if(!$mediaVideo, ModelNotFoundException::class);
+
+        $urls = get_play_url([
+            'aliyun_video_id' => $mediaVideo['storage_driver'] === FrontendConstant::VOD_SERVICE_ALIYUN ? $mediaVideo['storage_file_id'] : '',
+            'tencent_video_id' => $mediaVideo['storage_driver'] === FrontendConstant::VOD_SERVICE_TENCENT ? $mediaVideo['storage_file_id'] : '',
+            'url' => '',
+        ], false);
+
+        if (!$urls) {
+            return $this->error(__('错误'));
+        }
+
+        return $this->data(compact('urls'));
     }
 }

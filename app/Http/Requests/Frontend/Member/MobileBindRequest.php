@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Requests\Frontend\Member;
@@ -27,7 +27,7 @@ class MobileBindRequest extends BaseRequest
     public function messages()
     {
         return [
-            'mobile.required' => __('mobile.required'),
+            'mobile.required' => __('请输入手机号'),
         ];
     }
 

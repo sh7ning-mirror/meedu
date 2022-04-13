@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Controllers\Backend\Api\V1;
@@ -15,7 +15,12 @@ class AnnouncementController extends BaseController
 {
     public function index()
     {
-        $announcements = Announcement::orderByDesc('id')->paginate(request()->input('size', 12));
+        $announcements = Announcement::query()
+            ->select([
+                'id', 'admin_id', 'created_at', 'view_times', 'title',
+            ])
+            ->orderByDesc('id')
+            ->paginate(request()->input('size', 10));
 
         return $this->successData($announcements);
     }

@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Requests\Frontend;
@@ -22,11 +22,6 @@ class SearchRequest extends FormRequest
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules()
     {
         return [];
@@ -35,7 +30,7 @@ class SearchRequest extends FormRequest
     public function messages()
     {
         return [
-            'keywords.required' => __('keywords.required'),
+            'keywords.required' => __('请输入搜索关键字'),
         ];
     }
 

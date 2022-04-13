@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Requests\Backend;
@@ -35,7 +35,7 @@ class CourseChapterRequest extends BaseRequest
     public function messages()
     {
         return [
-            'title.required' => '请输入章节名',
+            'title.required' => __('请输入章节名'),
         ];
     }
 

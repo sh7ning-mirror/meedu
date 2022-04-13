@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace Tests\Feature\Api\V2;
@@ -25,9 +25,17 @@ class Base extends TestCase
         $message && $this->assertEquals($message, $c['message']);
     }
 
-    public function assertResponseSuccess($response)
+
+    public function assertResponseSuccess($request)
     {
-        $c = $response->response->getContent();
+        /**
+         * @var \Laravel\BrowserKitTesting\TestResponse $response
+         */
+        $response = $request->response;
+
+        $this->assertEquals(200, $response->getStatusCode());
+
+        $c = $response->getContent();
         $c = json_decode($c, true);
         $this->assertEquals(0, $c['code']);
         return $c;

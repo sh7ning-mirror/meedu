@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace Tests\Feature\Api\V2;
@@ -22,7 +22,7 @@ class PasswordTest extends Base
         $mobile = '18287829922';
         $oldPassword = '123123';
         $newPassword = '456456';
-        $user = factory(User::class)->create(['mobile' => $mobile, 'password' => Hash::make($oldPassword)]);
+        $user = User::factory()->create(['mobile' => $mobile, 'password' => Hash::make($oldPassword)]);
 
         $mobileCode = Str::random(6);
 
@@ -49,7 +49,7 @@ class PasswordTest extends Base
         $mobile = '18287829922';
         $oldPassword = '123123';
         $newPassword = '456456';
-        $user = factory(User::class)->create(['mobile' => $mobile, 'password' => Hash::make($oldPassword)]);
+        $user = User::factory()->create(['mobile' => $mobile, 'password' => Hash::make($oldPassword)]);
 
         $mobileCode = Str::random(6);
 
@@ -58,7 +58,7 @@ class PasswordTest extends Base
             'mobile_code' => $mobileCode,
             'password' => $newPassword,
         ]);
-        $this->assertResponseError($response, __('mobile code error'));
+        $this->assertResponseError($response, __('短信验证码错误'));
     }
 
     public function test_mobile_not_exists()
@@ -81,6 +81,6 @@ class PasswordTest extends Base
             'mobile_code' => $mobileCode,
             'password' => $newPassword,
         ]);
-        $this->assertResponseError($response, __('mobile not exists'));
+        $this->assertResponseError($response, __('手机号不存在'));
     }
 }

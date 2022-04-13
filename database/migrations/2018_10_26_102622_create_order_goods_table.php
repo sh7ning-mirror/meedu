@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 use Illuminate\Support\Facades\Schema;
@@ -28,6 +28,8 @@ class CreateOrderGoodsTable extends Migration
             $table->integer('num')->default(1)->comment('商品数量');
             $table->integer('charge')->comment('商品价格');
             $table->timestamps();
+
+            $table->engine = 'InnoDB';
         });
     }
 

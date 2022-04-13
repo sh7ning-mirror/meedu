@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 return [
@@ -22,6 +22,22 @@ return [
         'yunpian' => [
             'api_key' => env('SMS_YUNPIAN_API_KEY', ''),
             'signature' => '',
+            'template' => [
+                'password_reset' => '',
+                'register' => '',
+                'mobile_bind' => '',
+                'login' => '',
+            ],
+        ],
+        'tencent' => [
+            'region' => '',
+            // 短信SDKAppId
+            'sdk_app_id' => '',
+            'secret_id' => '',
+            'secret_key' => '',
+            // 短信签名
+            'sign_name' => '',
+            // 短信模板
             'template' => [
                 'password_reset' => '',
                 'register' => '',

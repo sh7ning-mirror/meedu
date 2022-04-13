@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Requests\Frontend\Member;
@@ -15,15 +15,16 @@ class NicknameChangeRequest extends BaseRequest
     public function rules()
     {
         return [
-            'nick_name' => 'required|max:10',
+            'nick_name' => 'required|min:3|max:12',
         ];
     }
 
     public function messages()
     {
         return [
-            'nick_name.required' => __('nick_name.required'),
-            'nick_name.max' => __('nick_name.max', ['max' => 10]),
+            'nick_name.required' => __('请输入昵称'),
+            'nick_name.max' => __('昵称不能多于:size个字', ['max' => 12]),
+            'nick_name.min' => __('昵称不能少于:size个字', ['max' => 3]),
         ];
     }
 

@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 use Illuminate\Support\Facades\Schema;
@@ -27,6 +27,8 @@ class CreateRolesTable extends Migration
             $table->integer('weight')->default(0)->comment('权重，升序');
             $table->string('description')->default('')->comment('详细描述，一行一个');
             $table->timestamps();
+
+            $table->engine = 'InnoDB';
         });
     }
 

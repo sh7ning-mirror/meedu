@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 use Illuminate\Support\Facades\Schema;
@@ -24,6 +24,8 @@ class CreateUserRemarksTable extends Migration
             $table->bigInteger('user_id')->unique();
             $table->text('remark')->nullable(true)->default(null)->comment('备注');
             $table->timestamps();
+
+            $table->engine = 'InnoDB';
         });
     }
 

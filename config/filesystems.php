@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 return [
@@ -98,7 +98,23 @@ return [
             'cdnDomain' => env('ALI_OSS_DOMAIN'),
             'ssl' => true,
             'isCName' => true,
-            'debug' => false
+            'debug' => false,
+        ],
+
+        'cos' => [
+            'driver' => 'cos',
+            'region' => env('TENCENT_COS_REGION', 'ap-guangzhou'),
+            'credentials' => [
+                'appId' => env('TENCENT_COS_APP_ID'),
+                'secretId' => env('TENCENT_COS_SECRET_ID'),
+                'secretKey' => env('TENCENT_COS_SECRET_KEY'),
+            ],
+            'timeout' => 60,
+            'connect_timeout' => 5,
+            'bucket' => env('TENCENT_COS_BUCKET'),
+            'cdn' => env('TENCENT_COS_CDN'),
+            'scheme' => 'https',
+            'read_from_cdn' => env('TENCENT_COS_READ_FROM_CDN', false),
         ],
 
     ],

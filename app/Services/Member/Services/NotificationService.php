@@ -3,13 +3,12 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Services\Member\Services;
 
 use App\Services\Member\Models\User;
-use Illuminate\Support\Facades\Auth;
 use App\Services\Member\Interfaces\NotificationServiceInterface;
 use App\Services\Member\Notifications\SimpleMessageNotification;
 
@@ -27,7 +26,7 @@ class NotificationService implements NotificationServiceInterface
          * @var User
          */
         $user = User::findOrFail($userId);
-        $user->notify(new SimpleMessageNotification(sprintf('积分变动：%d，备注：%s', $credit1, $message)));
+        $user->notify(new SimpleMessageNotification(sprintf(__('积分变动:%d，备注:%s'), $credit1, $message)));
     }
 
     /**
@@ -40,7 +39,7 @@ class NotificationService implements NotificationServiceInterface
          * @var User
          */
         $user = User::findOrFail($id);
-        $user->notify(new SimpleMessageNotification(__('notification_content_order_paid', ['orderId' => $orderId])));
+        $user->notify(new SimpleMessageNotification(__('订单:orderId已支付', ['orderId' => $orderId])));
     }
 
     /**
@@ -49,7 +48,7 @@ class NotificationService implements NotificationServiceInterface
     public function notifyRegisterMessage(int $id): void
     {
         $user = User::findOrFail($id);
-        $user->notify(new SimpleMessageNotification(__('notification_content_register')));
+        $user->notify(new SimpleMessageNotification(__('用户注册成功')));
     }
 
     /**
@@ -58,7 +57,7 @@ class NotificationService implements NotificationServiceInterface
     public function notifyBindMobileMessage(int $id): void
     {
         $user = User::findOrFail($id);
-        $user->notify(new SimpleMessageNotification(__('notification_content_bind_mobile')));
+        $user->notify(new SimpleMessageNotification(__('请绑定手机号')));
     }
 
     /**
@@ -68,32 +67,16 @@ class NotificationService implements NotificationServiceInterface
     public function notifyInviteBalanceWithdrawHandledMessage(int $id, $status): void
     {
         $user = User::findOrFail($id);
-        $user->notify(new SimpleMessageNotification(__('notification_invite_balance_withdraw_handled', ['status' => $status])));
+        $user->notify(new SimpleMessageNotification(__('邀请余额提现:status', ['status' => $status])));
     }
 
     /**
      * @param int $userId
-     * @param int $atUserId
-     * @param string $scene
-     * @param string $link
-     */
-    public function notifyAtNotification(int $userId, int $atUserId, string $scene, string $link): void
-    {
-        $user = User::findOrFail($userId);
-        $atUser = User::findOrFail($atUserId);
-        $atUser->notify(new SimpleMessageNotification(__('notification_content_at', [
-            'atUser' => $user->nick_name,
-            'scene' => $scene,
-            'link' => $link,
-        ])));
-    }
-
-    /**
      * @return int
      */
-    public function getUnreadCount(): int
+    public function getUnreadCount(int $userId): int
     {
-        return User::find(Auth::id())->unreadNotifications()->count();
+        return User::find($userId)->unreadNotifications()->count();
     }
 
     /**
@@ -111,5 +94,15 @@ class NotificationService implements NotificationServiceInterface
     public function markAllRead(int $userId): void
     {
         User::find($userId)->unreadNotifications->markAsRead();
+    }
+
+    /**
+     * @param int $id
+     * @param string $message
+     */
+    public function notify(int $id, string $message): void
+    {
+        $user = User::query()->where('id', $id)->firstOrFail();
+        $user->notify(new SimpleMessageNotification($message));
     }
 }

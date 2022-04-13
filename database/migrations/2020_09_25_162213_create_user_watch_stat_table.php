@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 use Illuminate\Support\Facades\Schema;
@@ -30,6 +30,8 @@ class CreateUserWatchStatTable extends Migration
             $table->softDeletes();
 
             $table->index(['user_id', 'year', 'month', 'day'], 'u_ymd');
+
+            $table->engine = 'InnoDB';
         });
     }
 

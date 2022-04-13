@@ -3,13 +3,12 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Requests\Backend;
 
-use Overtrue\Pinyin\Pinyin;
-use App\Services\Course\Models\Video;
+use Carbon\Carbon;
 
 class CourseVideoRequest extends BaseRequest
 {
@@ -33,33 +32,29 @@ class CourseVideoRequest extends BaseRequest
         return [
             'course_id' => 'required',
             'title' => 'required|max:255',
-            'published_at' => 'required|date',
-            'is_show' => 'required',
-            'duration' => 'required|integer',
+            'published_at' => 'required',
+            'duration' => 'required',
         ];
     }
 
     public function messages()
     {
         return [
-            'course_id.required' => '请选择视频所属课程',
-            'title.required' => '请输入视频标题',
-            'title.max' => '视频标题长度不能超过255个字符',
-            'published_at.required' => '请选择视频上线时间',
-            'published_at.date' => '请选择正确的视频上线时间',
-            'is_show.required' => '请选择视频是否显示',
-            'duration.required' => '请输入视频时长',
-            'duration.integer' => '视频时长必须为整数',
+            'course_id.required' => __('请选择视频所属课程'),
+            'title.required' => __('请输入视频标题'),
+            'title.max' => __('视频标题长度不能超过:size个字符', ['size' => 255]),
+            'published_at.required' => __('请选择视频上架时间'),
+            'duration.required' => __('请输入视频时长'),
         ];
     }
 
     public function filldata()
     {
-        $data = [
+        return [
             'user_id' => $this->input('user_id', 0),
             'course_id' => $this->input('course_id'),
             'title' => $this->input('title'),
-            'slug' => $this->input('slug'),
+            'slug' => '',
             'url' => $this->input('url', '') ?? '',
             'aliyun_video_id' => $this->input('aliyun_video_id', '') ?? '',
             'tencent_video_id' => $this->input('tencent_video_id', '') ?? '',
@@ -69,23 +64,14 @@ class CourseVideoRequest extends BaseRequest
             'render_desc' => $this->input('render_desc') ?? '',
             'seo_keywords' => (string)$this->input('seo_keywords', ''),
             'seo_description' => (string)$this->input('seo_description', ''),
-            'published_at' => $this->input('published_at'),
-            'is_show' => $this->input('is_show'),
-            'charge' => $this->input('charge', 0),
-            'chapter_id' => $this->input('chapter_id', 0),
-            'duration' => $this->input('duration'),
-            'is_ban_sell' => $this->input('is_ban_sell', 0),
-            'comment_status' => (int)$this->input('comment_status', Video::COMMENT_STATUS_CLOSE),
-            'player_pc' => $this->input('player_pc', ''),
-            'player_h5' => $this->input('player_h5', ''),
+            'published_at' => Carbon::parse($this->input('published_at'))->toDateTimeLocalString(),
+            'is_show' => (int)$this->input('is_show'),
+            'charge' => (int)$this->input('charge', 0),
+            'chapter_id' => (int)$this->input('chapter_id', 0),
+            'duration' => (int)$this->input('duration'),
+            'is_ban_sell' => (int)$this->input('is_ban_sell', 0),
             'free_seconds' => (int)$this->input('free_seconds'),
             'ban_drag' => (int)$this->input('ban_drag', 0),
         ];
-
-        if ($this->isMethod('post') && !$data['slug']) {
-            $data['slug'] = implode('-', (new Pinyin())->convert($data['title']));
-        }
-
-        return $data;
     }
 }

@@ -3,23 +3,33 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Controllers\Backend\Api\V1;
 
+use Illuminate\Http\Request;
 use App\Constant\FrontendConstant;
 use App\Services\Other\Models\Nav;
 use App\Http\Requests\Backend\NavRequest;
 
 class NavController extends BaseController
 {
-    public function index()
+    public function index(Request $request)
     {
+        $platform = $request->input('platform');
+
         $navs = Nav::query()
+            ->select([
+                'id', 'sort', 'name', 'url', 'active_routes', 'platform', 'parent_id',
+                'blank', 'created_at', 'updated_at',
+            ])
             ->with(['children'])
+            ->when($platform, function ($query) use ($platform) {
+                $query->where('platform', $platform);
+            })
             ->where('parent_id', 0)
-            ->orderByDesc('sort')
+            ->orderBy('sort')
             ->get();
 
         return $this->successData($navs);

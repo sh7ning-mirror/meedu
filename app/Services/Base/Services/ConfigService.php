@@ -3,12 +3,11 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Services\Base\Services;
 
-use App\Constant\FrontendConstant;
 use App\Services\Base\Model\AppConfig;
 use App\Services\Base\Interfaces\ConfigServiceInterface;
 
@@ -86,6 +85,21 @@ class ConfigService implements ConfigServiceInterface
         return config('meedu.system.icp', '');
     }
 
+    public function getIcpLink()
+    {
+        return config('meedu.system.icp_link');
+    }
+
+    public function getIcp2()
+    {
+        return config('meedu.system.icp2', '');
+    }
+
+    public function getIcp2Link()
+    {
+        return config('meedu.system.icp2_link', '');
+    }
+
     /**
      * 播放器封面
      *
@@ -93,7 +107,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function getPlayerCover(): string
     {
-        return config('meedu.system.player_thumb', '');
+        return config('meedu.system.player_thumb') ?? '';
     }
 
     /**
@@ -134,7 +148,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function getMemberPrivateProtocol(): string
     {
-        return config('meedu.member.private_protocol', '');
+        return config('meedu.member.private_protocol') ?? '';
     }
 
     /**
@@ -143,7 +157,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function getAboutus(): string
     {
-        return config('meedu.aboutus', '');
+        return config('meedu.aboutus') ?? '';
     }
 
     /**
@@ -152,7 +166,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function getMemberDefaultAvatar(): string
     {
-        return config('meedu.member.default_avatar');
+        return config('meedu.member.default_avatar') ?? '';
     }
 
     /**
@@ -174,62 +188,12 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /**
-     * 课程列表默认显示条数
-     * @return int
-     */
-    public function getCourseListPageSize(): int
-    {
-        return (int)config('meedu.other.course_list_page_size', 6);
-    }
-
-    /**
-     * 课程列表页面SEO
-     * @return array
-     */
-    public function getSeoCourseListPage(): array
-    {
-        return config('meedu.seo.course_list');
-    }
-
-    /**
-     * 视频列表页面显示条数
-     * @return int
-     */
-    public function getVideoListPageSize(): int
-    {
-        return (int)config('meedu.other.video_list_page_size', 10);
-    }
-
-    /**
-     * 获取默认的编辑器
-     * @return string
-     */
-    public function getEditor(): string
-    {
-        return config('meedu.system.editor', 'html');
-    }
-
-    /**
      * 短信配置
      * @return array
      */
     public function getSms(): array
     {
         return config('sms');
-    }
-
-    /**
-     * 会员界面SEO
-     * @return array
-     */
-    public function getSeoRoleListPage(): array
-    {
-        return config('meedu.seo.role_list');
-    }
-
-    public function getSeoIndexPage(): array
-    {
-        return config('meedu.seo.index');
     }
 
     /**
@@ -269,7 +233,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function getCacheStatus(): bool
     {
-        return (int)config('meedu.system.cache.status') === FrontendConstant::YES;
+        return (int)config('meedu.system.cache.status') === 1;
     }
 
     /**
@@ -524,5 +488,106 @@ class ConfigService implements ConfigServiceInterface
     public function getAmapkey(): string
     {
         return config('meedu.services.amap.key', '');
+    }
+
+    /**
+     * 获取微信扫码登录成功回复语
+     *
+     * @return \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed
+     */
+    public function getMpWechatScanLoginAlert()
+    {
+        return config('meedu.mp_wechat.scan_login_alert');
+    }
+
+    /**
+     * @return int
+     */
+    public function getSocialiteQQLoginEnabled()
+    {
+        return (int)config('meedu.member.socialite.qq.enabled');
+    }
+
+    public function getSocialiteWechatScanLoginEnabled()
+    {
+        return (int)config('meedu.mp_wechat.enabled_scan_login');
+    }
+
+    public function getSocialiteWechatLoginEnabled()
+    {
+        return (int)config('meedu.mp_wechat.enabled_oauth_login');
+    }
+
+    public function getUrl(): string
+    {
+        return config('app.url');
+    }
+
+    // deprecated
+    public function getTencentVodTranscodeFormat(): array
+    {
+        $format = strtolower(config('tencent.vod.transcode_format', ''));
+        return $format ? explode(',', $format) : [];
+    }
+
+    /**
+     * @return array
+     */
+    public function getTencentSms(): array
+    {
+        return config('sms.gateways.tencent');
+    }
+
+    /**
+     * @return string
+     */
+    public function getPcUrl(): string
+    {
+        return config('meedu.system.pc_url');
+    }
+
+    /**
+     * @return string
+     */
+    public function getH5Url(): string
+    {
+        return config('meedu.system.h5_url');
+    }
+
+    /**
+     * @return bool
+     */
+    public function enabledFullSearch(): bool
+    {
+        return (bool)config('scout.meilisearch.host');
+    }
+
+    /**
+     * @return string
+     */
+    public function getTencentVodPlayKey(): string
+    {
+        return config('meedu.system.player.tencent_play_key', '') ?? '';
+    }
+
+    /**
+     * @return array
+     */
+    public function getPlayVideoFormatWhitelist(): array
+    {
+        $whitelist = config('meedu.system.player.video_format_whitelist') ?? '';
+        if (!$whitelist) {
+            return [];
+        }
+        return array_map('strtolower', explode(',', $whitelist));
+        ;
+    }
+
+    /**
+     * @return bool
+     */
+    public function enabledRedisCache(): bool
+    {
+        return config('cache.default') === 'redis';
     }
 }

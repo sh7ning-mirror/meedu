@@ -3,23 +3,22 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Services\Course\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class CourseCategory extends Model
 {
+    use HasFactory;
+
     protected $table = 'course_categories';
 
-    const IS_SHOW_YES = 1;
-    const IS_SHOW_NO = 0;
-
     protected $fillable = [
-        'sort', 'name', 'parent_id', 'parent_chain',
-        'is_show',
+        'sort', 'name', 'parent_id', 'parent_chain', 'is_show',
     ];
 
     /**
@@ -28,7 +27,7 @@ class CourseCategory extends Model
      */
     public function scopeShow($query)
     {
-        return $query->whereIsShow(self::IS_SHOW_YES);
+        return $query->where('is_show', 1);
     }
 
     /**
@@ -38,5 +37,10 @@ class CourseCategory extends Model
     public function scopeSort($query)
     {
         return $query->orderBy('sort');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(__CLASS__, 'parent_id');
     }
 }

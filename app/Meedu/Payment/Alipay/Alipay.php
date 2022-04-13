@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Meedu\Payment\Alipay;
@@ -67,7 +67,6 @@ class Alipay implements Payment
         // 同步返回地址
         $returnUrl = request()->input('redirect');
         $returnUrl || $returnUrl = request()->input('s_url');
-        $returnUrl || $returnUrl = route('order.pay.success');
         $config['return_url'] = $returnUrl;
 
         // 创建支付宝支付订单

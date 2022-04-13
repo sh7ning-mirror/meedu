@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Listeners\UserCourseWatchedEvent;
@@ -40,6 +40,9 @@ class UserCourseWatchedListener implements ShouldQueue
      */
     public function handle(UserCourseWatchedEvent $event)
     {
+        if ($this->courseService->isExistsCourseUserRecord($event->userId, $event->courseId) === false) {
+            $this->courseService->createCourseUserRecord($event->userId, $event->courseId);
+        }
         $this->courseService->setUserWatchedCourse($event->userId, $event->courseId);
     }
 }

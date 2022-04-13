@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Console\Commands;
@@ -27,7 +27,7 @@ class OrderTimeoutHandlerCommand extends Command
      *
      * @var string
      */
-    protected $description = 'order pay timeout.';
+    protected $description = '订单超时处理（自动置为已取消=无法继续支付）';
 
     /**
      * @var OrderService
@@ -60,5 +60,7 @@ class OrderTimeoutHandlerCommand extends Command
             $this->line($order['order_id']);
             $this->orderService->cancel($order['id']);
         }
+
+        return 0;
     }
 }

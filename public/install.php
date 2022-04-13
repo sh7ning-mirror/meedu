@@ -6,29 +6,47 @@ function alert($message)
     exit($message);
 }
 
+function is_https()
+{
+    if (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off') {
+        return true;
+    } elseif (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+        return true;
+    } elseif (!empty($_SERVER['HTTP_FRONT_END_HTTPS']) && strtolower($_SERVER['HTTP_FRONT_END_HTTPS']) !== 'off') {
+        return true;
+    }
+    return false;
+}
+
 if (file_exists('../storage/install.lock')) {
     alert('请勿重复安装');
 }
 $uri = $_SERVER['REQUEST_URI'];
-if (stripos($uri, '/public/ius') !== false) {
+if (mb_substr($uri, 0, 7) === '/public') {
     // 网站根目录配置错啦
-    alert('网站运行根目录配置错误');
+    alert('网站运行根目录配置错误。请将网站运行目录配置到meedu程序根目录下的public目录。');
 }
 
 $step = (int)($_GET['step'] ?? 0);
 $isSubmit = $_POST['submit'] ?? false;
 
+// 已安装的扩展
 $extensions = array_flip(get_loaded_extensions());
+
+// 已禁用的函数
 $disabledFunctions = array_flip(explode(',', ini_get('disable_functions')));
-$storagePath = str_replace('public', 'storage', __DIR__);
-$bootstrapPath = str_replace('public', 'bootstrap', __DIR__);
-$addonsPath = str_replace('public', 'addons', __DIR__);
-$resourcesPath = str_replace('public', 'resources', __DIR__);
+
+// 可写路径
+$storagePath = realpath(__DIR__ . '/../storage');
+$bootstrapPath = realpath(__DIR__ . '/../bootstrap');
+$addonsPath = realpath(__DIR__ . '/../addons');
+
+// 要求
 $requires = [
     [
         'item' => PHP_VERSION,
-        'status' => PHP_VERSION_ID > 70103,
-        'intro' => 'PHP版本>=7.1.3',
+        'status' => version_compare('v7.3.0', PHP_VERSION, '<='),
+        'intro' => 'PHP版本>=7.3.0',
     ],
     [
         'item' => 'ext-Fileinfo',
@@ -86,11 +104,6 @@ $requires = [
         'intro' => '必须可写',
     ],
     [
-        'item' => $resourcesPath,
-        'status' => is_writable($resourcesPath),
-        'intro' => '必须可写',
-    ],
-    [
         'item' => $bootstrapPath,
         'status' => is_writable($bootstrapPath),
         'intro' => '必须可写',
@@ -118,6 +131,16 @@ $requires = [
     [
         'item' => 'putenv()',
         'status' => !isset($disabledFunctions['putenv']),
+        'intro' => '该函数不能被禁用',
+    ],
+    [
+        'item' => 'pcntl_signal()',
+        'status' => !isset($disabledFunctions['pcntl_signal']),
+        'intro' => '该函数不能被禁用',
+    ],
+    [
+        'item' => 'pcntl_alarm()',
+        'status' => !isset($disabledFunctions['pcntl_alarm']),
         'intro' => '该函数不能被禁用',
     ],
 ];
@@ -151,12 +174,7 @@ if ($step === 0) {
                 <a href="https://meedu.vip/" target="_blank"><img src="/images/logo.png" height="40"></a>
             </div>
             <div class="col-12 mb-5 text-center">
-                <h2>MeEdu安装程序</h2>
-            </div>
-            <div class="col-12">
-                <div class="alert alert-info text-center">
-                    <p class="mb-0">MeEdu是基于MIT协议的开源免费在线点播系统，您可以在任何环境中使用它而不必支付费用。</p>
-                </div>
+                <h2>MeEdu 傻瓜安装程序</h2>
             </div>
             <div class="col-12">
                 <table class="table table-hover">
@@ -211,7 +229,15 @@ if ($step === 0) {
         }
 
         if ($dbConnected) {
-            // 数据库连接成功，写入.env文件
+            // 数据库连接成功
+            // 将配置写入.env文件
+
+            // 如果未配置协议的话则自动配置协议
+            if (mb_substr($url, 0, 4) !== 'http') {
+                $url = (is_https() ? 'https://' : 'http://') . $url;
+            }
+
+            // 待替换的配置项
             $replaceArr = [
                 '{URL}' => $url,
                 '{MYSQL_HOST}' => $dbHost,
@@ -307,7 +333,7 @@ if ($step === 0) {
                     <div class="form-group">
                         <label>数据库密码</label>
                         <input type="text" name="db_pass" value="<?php echo $dbPass; ?>" class="form-control"
-                               placeholder="为空可不需要填写">
+                               placeholder="为空可不填写">
                     </div>
                     <div class="form-group">
                         <label>数据库</label>
@@ -359,7 +385,6 @@ if ($step === 0) {
                 <div class="pb-5">
                     <h3 style="color: green" class="my-5">安装成功</h3>
                     <a href="/" class="btn btn-success">网站首页</a>
-                    <a href="/admin" class="btn btn-info">后台地址</a>
                 </div>
             </div>
         </div>

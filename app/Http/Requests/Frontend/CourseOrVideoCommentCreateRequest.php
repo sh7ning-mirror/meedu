@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Requests\Frontend;
@@ -20,13 +20,13 @@ class CourseOrVideoCommentCreateRequest extends BaseRequest
     public function messages()
     {
         return [
-            'content.required' => __('comment.content.required'),
-            'content.min' => __('comment.content.min', ['count' => 6]),
+            'content.required' => __('请输入评论'),
+            'content.min' => __('评论内容不能少于:count个字', ['count' => 6]),
         ];
     }
 
     public function filldata()
     {
-        return ['content' => $this->post('content')];
+        return ['content' => strip_tags(clean($this->post('content')))];
     }
 }

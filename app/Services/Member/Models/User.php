@@ -3,18 +3,19 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Services\Member\Models;
 
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use Notifiable;
+    use Notifiable, HasFactory;
 
     public const ACTIVE_YES = 1;
     public const ACTIVE_NO = -1;
@@ -105,5 +106,10 @@ class User extends Authenticatable implements JWTSubject
     public function profile()
     {
         return $this->hasOne(UserProfile::class, 'user_id');
+    }
+
+    public function remark()
+    {
+        return $this->hasOne(UserRemark::class, 'user_id');
     }
 }

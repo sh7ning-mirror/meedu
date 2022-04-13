@@ -3,12 +3,14 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Services\Course\Services;
 
+use Carbon\Carbon;
 use App\Services\Course\Models\Video;
+use App\Services\Course\Models\MediaVideo;
 use App\Services\Course\Interfaces\VideoServiceInterface;
 
 class VideoService implements VideoServiceInterface
@@ -21,9 +23,9 @@ class VideoService implements VideoServiceInterface
     public function courseVideos(int $courseId): array
     {
         return Video::with(['chapter'])
-            ->show()
-            ->published()
-            ->whereCourseId($courseId)
+            ->where('is_show', 1)
+            ->where('published_at', '<=', Carbon::now())
+            ->where('course_id', $courseId)
             ->orderBy('published_at')
             ->get()
             ->groupBy(function ($item) {
@@ -40,7 +42,12 @@ class VideoService implements VideoServiceInterface
      */
     public function simplePage(int $page, int $pageSize): array
     {
-        $query = Video::with(['course'])->show()->published()->orderByDesc('published_at');
+        $query = Video::query()
+            ->with(['course'])
+            ->where('is_show', 1)
+            ->where('published_at', '<=', Carbon::now())
+            ->orderByDesc('published_at');
+
         $total = $query->count();
         $list = $query->forPage($page, $pageSize)->get()->toArray();
 
@@ -58,8 +65,8 @@ class VideoService implements VideoServiceInterface
         $video = Video::query()
             ->with($with)
             ->where('id', $id)
-            ->show()
-            ->published()
+            ->where('is_show', 1)
+            ->where('published_at', '<=', Carbon::now())
             ->first();
         return $video ?: null;
     }
@@ -73,8 +80,8 @@ class VideoService implements VideoServiceInterface
     {
         return Video::query()
             ->with(['course'])
-            ->show()
-            ->published()
+            ->where('is_show', 1)
+            ->where('published_at', '<=', Carbon::now())
             ->findOrFail($id)
             ->toArray();
     }
@@ -86,7 +93,14 @@ class VideoService implements VideoServiceInterface
      */
     public function getLatestVideos(int $limit): array
     {
-        return Video::with(['course'])->show()->published()->orderByDesc('published_at')->limit($limit)->get()->toArray();
+        return Video::query()
+            ->with(['course'])
+            ->where('is_show', 1)
+            ->where('published_at', '<=', Carbon::now())
+            ->orderByDesc('published_at')
+            ->limit($limit)
+            ->get()
+            ->toArray();
     }
 
     /**
@@ -96,7 +110,14 @@ class VideoService implements VideoServiceInterface
      */
     public function getList(array $ids): array
     {
-        return Video::with(['course'])->whereIn('id', $ids)->show()->published()->orderByDesc('published_at')->get()->toArray();
+        return Video::query()
+            ->with(['course'])
+            ->whereIn('id', $ids)
+            ->where('is_show', 1)
+            ->where('published_at', '<=', Carbon::now())
+            ->orderByDesc('published_at')
+            ->get()
+            ->toArray();
     }
 
     /**
@@ -105,7 +126,13 @@ class VideoService implements VideoServiceInterface
      */
     public function getCourseList(array $courseIds): array
     {
-        return Video::show()->published()->orderByDesc('published_at')->whereIn('course_id', $courseIds)->get()->toArray();
+        return Video::query()
+            ->where('is_show', 1)
+            ->where('published_at', '<=', Carbon::now())
+            ->orderByDesc('published_at')
+            ->whereIn('course_id', $courseIds)
+            ->get()
+            ->toArray();
     }
 
     /**
@@ -115,5 +142,21 @@ class VideoService implements VideoServiceInterface
     public function viewNumIncrement(int $videoId, int $num): void
     {
         Video::query()->where('id', $videoId)->increment('view_num', $num);
+    }
+
+    /**
+     * @param string $fileId
+     * @param string $service
+     * @return array
+     */
+    public function findOpenVideo(string $fileId, string $service): array
+    {
+        $mediaVideo = MediaVideo::query()
+            ->where('storage_file_id', $fileId)
+            ->where('storage_driver', $service)
+            ->where('is_open', 1)
+            ->first();
+
+        return $mediaVideo ? $mediaVideo->toArray() : [];
     }
 }

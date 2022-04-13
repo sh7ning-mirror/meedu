@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 return [
@@ -128,7 +128,6 @@ return [
             'sign' => 'wechat',
             'default_method' => 'scan',
             'pc' => 'scan',
-            'wechat_mini' => 'miniapp',
         ],
         'wechat-jsapi' => [
             'enabled' => 1,
@@ -154,19 +153,19 @@ return [
     // SEO
     'seo' => [
         'index' => [
-            'title' => 'MeEdu',
+            'title' => '首页',
             'keywords' => '',
-            'description' => 'MeEdu是一套开源的，免费的在线视频点播系统。',
+            'description' => '',
         ],
         'course_list' => [
             'title' => '所有课程',
             'keywords' => '',
-            'description' => 'MeEdu是一套开源的，免费的在线视频点播系统。',
+            'description' => '',
         ],
         'role_list' => [
             'title' => 'VIP',
             'keywords' => '',
-            'description' => 'MeEdu是一套开源的，免费的在线视频点播系统。',
+            'description' => '',
         ],
     ],
 
@@ -178,27 +177,39 @@ return [
         // 公安网备案
         'icp2' => '',
         'icp2_link' => '',
+        // 网站logo
         'logo' => '/images/logo.png',
-        'white_logo' => '/images/white-logo.png',
+        // 播放器封面
         'player_thumb' => '/images/player-thumb.png',
+
+        // PC网站地址
+        'pc_url' => '',
+
+        // H5网站地址
+        'h5_url' => '',
 
         // 播放器
         'player' => [
             // 跑马灯
             'enabled_bullet_secret' => 0,
-            // 阿里云私密播放
-            'enabled_aliyun_private' => 0,
+            'bullet_secret' => [
+                'text' => '', //默认为当前用户手机号
+                'size' => 0, //默认14px
+                'color' => '', //默认red
+                'opacity' => 1, //默认1
+            ],
             // 腾讯云播放key
             'tencent_play_key' => '',
-            // 腾讯云超级播放器配置
-            'tencent_pcfg' => 'default',
+            // 播放格式
+            'video_format_whitelist' => '',
         ],
 
         // 缓存开关
         'cache' => [
-            'status' => 0,
+            'status' => (int)env('MEEDU_CACHE_ENABLED', 0),
             'expire' => 3600 * 10,
         ],
+
         // 短信频率
         'limiter' => [
             'sms' => [
@@ -206,36 +217,19 @@ return [
                 'minutes' => 1,
             ]
         ],
-        // 统计代码
-        'js' => '',
-        // 主题
-        'theme' => [
-            'use' => 'default',
-            'path' => base_path(env('TEMPLATE_PATH') ?: 'resources/views'),
-        ],
+
         // 默认短信服务商
         'sms' => 'aliyun',
-        // editor
-        'editor' => \App\Constant\FrontendConstant::RENDER_MARKDOWN,
+
         // 登录
         'login' => [
             'limit' => [
                 'rule' => \App\Constant\FrontendConstant::LOGIN_LIMIT_RULE_DEFAULT,
             ]
         ],
-        // 全局css
-        'css' => [
-            'pc' => '',
-            'h5' => '',
-        ],
-    ],
 
-    // 其它配置
-    'other' => [
-        // 课程列表页展示条数
-        'course_list_page_size' => 16,
-        // 视频列表页展示条数
-        'video_list_page_size' => 16,
+        // 多语言
+        'lang' => \App\Constant\FrontendConstant::LANG_ZH,
     ],
 
     // MeEduCloud
@@ -264,6 +258,8 @@ return [
         'enabled_oauth_login' => 0,
         // 开启PC扫码登录
         'enabled_scan_login' => 0,
+        // 扫码登录后的提示语
+        'scan_login_alert' => '',
         // 开启微信浏览器的分享
         'enabled_share' => 0,
         // 微信H5分享自定义内容

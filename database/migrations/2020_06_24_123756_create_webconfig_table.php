@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 use Illuminate\Support\Facades\Schema;
@@ -32,6 +32,8 @@ class CreateWebconfigTable extends Migration
             $table->tinyInteger('is_private')->default(0)->comment('是否私密信息');
             $table->string('help')->default('')->comment('帮助信息');
             $table->timestamps();
+
+            $table->engine = 'InnoDB';
         });
     }
 

@@ -3,26 +3,27 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Businesses;
 
 use Carbon\Carbon;
 use App\Constant\FrontendConstant;
-use Illuminate\Support\Facades\Auth;
-use App\Services\Course\Models\Video;
+use App\Exceptions\ServiceException;
 use App\Services\Course\Models\Course;
 use App\Services\Base\Services\ConfigService;
 use App\Services\Member\Services\UserService;
 use App\Services\Order\Services\OrderService;
 use App\Services\Course\Services\CourseService;
 use App\Services\Order\Services\PromoCodeService;
+use App\Services\Member\Services\SocialiteService;
 use App\Services\Base\Interfaces\ConfigServiceInterface;
 use App\Services\Member\Interfaces\UserServiceInterface;
 use App\Services\Order\Interfaces\OrderServiceInterface;
 use App\Services\Course\Interfaces\CourseServiceInterface;
 use App\Services\Order\Interfaces\PromoCodeServiceInterface;
+use App\Services\Member\Interfaces\SocialiteServiceInterface;
 
 class BusinessState
 {
@@ -36,14 +37,23 @@ class BusinessState
      */
     public function canSeeVideo(array $user, array $course, array $video): bool
     {
-        /**
-         * @var UserService $userService
-         */
-        $userService = app()->make(UserServiceInterface::class);
         // 如果video的价格为0那么可以直接观看
         if ($video['charge'] === 0) {
             return true;
         }
+        /**
+         * @var CourseService $courseService
+         */
+        $courseService = app()->make(CourseServiceInterface::class);
+        $course = $courseService->find($course['id']);
+        // 如果课程免费就可以观看
+        if ((int)$course['is_free'] === Course::IS_FREE_YES) {
+            return true;
+        }
+        /**
+         * @var UserService $userService
+         */
+        $userService = app()->make(UserServiceInterface::class);
         // 如果用户买了课程可以直接观看
         if ($userService->hasCourse($user['id'], $course['id'])) {
             return true;
@@ -120,7 +130,7 @@ class BusinessState
             // 开启了非会员无法生成优惠码
             return false;
         }
-        $userPromoCode = $promoCodeService->userPromoCode();
+        $userPromoCode = $promoCodeService->userPromoCode($user['id']);
         if ($userPromoCode) {
             // 已经生成
             return false;
@@ -129,14 +139,15 @@ class BusinessState
     }
 
     /**
+     * @param int $loginUserId
      * @param array $promoCode
      * @return bool
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
-    public function promoCodeCanUse(array $promoCode): bool
+    public function promoCodeCanUse(int $loginUserId, array $promoCode): bool
     {
         // 自己不能使用自己的优惠码
-        if ($promoCode['user_id'] === Auth::id()) {
+        if ($promoCode['user_id'] === $loginUserId) {
             return false;
         }
         if ($promoCode['use_times'] > 0 && $promoCode['use_times'] - $promoCode['used_times'] <= 0) {
@@ -148,7 +159,7 @@ class BusinessState
          */
         $promoCodeService = app()->make(PromoCodeServiceInterface::class);
         // 同一邀请码一个用户只能用一次
-        $useRecords = $promoCodeService->getCurrentUserOrderPaidRecords($promoCode['id']);
+        $useRecords = $promoCodeService->getCurrentUserOrderPaidRecords($loginUserId, $promoCode['id']);
         if ($useRecords) {
             return false;
         }
@@ -160,8 +171,8 @@ class BusinessState
          * @var $userService UserService
          */
         $userService = app()->make(UserServiceInterface::class);
-        $user = $userService->find(Auth::id());
-        if ($user['is_used_promo_code'] === FrontendConstant::YES) {
+        $user = $userService->find($loginUserId);
+        if ((int)$user['is_used_promo_code'] === 1) {
             // 用户邀请优惠码只能使用一次
             return false;
         }
@@ -236,25 +247,10 @@ class BusinessState
      */
     public function courseCanComment(array $user, array $course): bool
     {
-        $commentStatus = $course['comment_status'] ?? Course::COMMENT_STATUS_CLOSE;
-        if ($commentStatus === Course::COMMENT_STATUS_CLOSE) {
-            return false;
-        }
-        if ($commentStatus === Course::COMMENT_STATUS_ALL) {
-            return true;
-        }
         if (!$user) {
             return false;
         }
-        /**
-         * @var $userService UserService
-         */
-        $userService = app()->make(UserServiceInterface::class);
-        $user = $userService->find($user['id'], ['role']);
-        if ($this->isRole($user)) {
-            return true;
-        }
-        if ($userService->hasCourse($user['id'], $course['id'])) {
+        if ($this->isBuyCourse($user['id'], $course['id'])) {
             return true;
         }
         return false;
@@ -262,23 +258,8 @@ class BusinessState
 
     public function videoCanComment(array $user, array $video): bool
     {
-        $commentStatus = $video['comment_status'] ?? Video::COMMENT_STATUS_CLOSE;
-        if ($commentStatus === Video::COMMENT_STATUS_CLOSE) {
-            return false;
-        }
-        if ($commentStatus === Video::COMMENT_STATUS_ALL) {
-            return true;
-        }
         if (!$user) {
             return false;
-        }
-        /**
-         * @var UserService $userService
-         */
-        $userService = app()->make(UserServiceInterface::class);
-        $user = $userService->find($user['id'], ['role']);
-        if ($this->isRole($user)) {
-            return true;
         }
         /**
          * @var CourseService $courseService
@@ -323,5 +304,23 @@ class BusinessState
         $enabledOAuthLogin = (int)($mpWechatConfig['enabled_scan_login'] ?? 0);
 
         return $enabledOAuthLogin === 1;
+    }
+
+    public function socialiteBindCheck(int $userId, string $app, string $appId): void
+    {
+        /**
+         * @var SocialiteService $socialiteService
+         */
+        $socialiteService = app()->make(SocialiteServiceInterface::class);
+
+        $hasBindSocialites = $socialiteService->userSocialites($userId);
+        if (in_array($app, array_column($hasBindSocialites, 'app'))) {
+            throw new ServiceException(__('您已经绑定了该渠道的账号'));
+        }
+
+        // 读取当前社交账号绑定的用户id
+        if ($socialiteService->getBindUserId($app, $appId)) {
+            throw new ServiceException(__('当前渠道账号已绑定了其它账号'));
+        }
     }
 }

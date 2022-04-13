@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 use Illuminate\Support\Facades\Schema;
@@ -24,6 +24,8 @@ class CreateAdFromsTable extends Migration
             $table->string('from_name');
             $table->string('from_key');
             $table->timestamps();
+
+            $table->engine = 'InnoDB';
         });
     }
 

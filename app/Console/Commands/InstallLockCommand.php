@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Console\Commands;
@@ -24,7 +24,7 @@ class InstallLockCommand extends Command
      *
      * @var string
      */
-    protected $description = '生成安装锁🔐';
+    protected $description = '生成安装锁，防止已安装之后再次访问install.php';
 
     /**
      * Create a new command instance.
@@ -36,15 +36,11 @@ class InstallLockCommand extends Command
         parent::__construct();
     }
 
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
     public function handle()
     {
         if (!file_exists(storage_path('install.lock'))) {
             file_put_contents(storage_path('install.lock'), time());
         }
+        return 0;
     }
 }

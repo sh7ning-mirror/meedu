@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Services\Base\Services;
@@ -51,5 +51,10 @@ class CacheService implements CacheServiceInterface
     public function forever(string $name, $val): bool
     {
         return Cache::forever($name, $val);
+    }
+
+    public function add(string $key, $value, $expire)
+    {
+        return Cache::add($key, $value, $expire);
     }
 }

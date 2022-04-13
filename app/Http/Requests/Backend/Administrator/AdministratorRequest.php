@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Requests\Backend\Administrator;
@@ -31,13 +31,12 @@ class AdministratorRequest extends BaseRequest
     public function rules()
     {
         $rules = [
-            'name' => 'bail|required|max:16',
-            'email' => ['bail', 'email'],
+            'name' => 'bail|required',
+            'email' => 'required|email',
         ];
 
         if ($this->isMethod('post')) {
-            $rules['email'] = array_merge($rules['email'], ['required', 'unique:administrators']);
-            $rules['password'] = 'bail|required|min:6|max:16|confirmed';
+            $rules['password'] = 'bail|required|min:6|max:16';
         }
 
         return $rules;
@@ -46,32 +45,25 @@ class AdministratorRequest extends BaseRequest
     public function messages()
     {
         return [
-            'name.required' => '请输入姓名',
-            'name.max' => '姓名长度不能超过16个字符',
-            'email.required' => '请输入邮箱',
-            'email.email' => '请输入合法邮箱',
-            'email.unique' => '邮箱已经存在',
-            'password.required' => '请输入密码',
-            'password.min' => '密码长度不能小于6个字符',
-            'password.max' => '密码长度不能超过16个字符',
-            'password.confirmed' => '两次输入密码不一致',
+            'name.required' => __('请输入管理员昵称'),
+            'email.required' => __('请输入邮箱'),
+            'email.email' => __('请输入合法邮箱'),
+            'password.required' => __('请输入密码'),
+            'password.min' => __('密码长度不能少于:size个字符', ['size' => 6]),
+            'password.max' => __('密码长度不能多于:size个字符', ['size' => 16]),
         ];
     }
 
-    /**
-     * @return array
-     */
     public function filldata()
     {
         $data = [
             'name' => $this->input('name'),
+            'email' => $this->input('email'),
             'is_ban_login' => (int)$this->input('is_ban_login'),
         ];
 
-        // 编辑
-        $this->input('password') && $data['password'] = Hash::make($this->input('password'));
-        if ($this->isMethod('post')) {
-            $data['email'] = $this->input('email');
+        if ($password = $this->input('password')) {
+            $data['password'] = Hash::make($password);
         }
 
         return $data;

@@ -3,7 +3,7 @@
 /*
  * This file is part of the Qsnh/meedu.
  *
- * (c) XiaoTeng <616896861@qq.com>
+ * (c) 杭州白书科技有限公司
  */
 
 namespace App\Http\Controllers\Backend\Api\V1;
@@ -11,7 +11,6 @@ namespace App\Http\Controllers\Backend\Api\V1;
 use Carbon\Carbon;
 use App\Models\Administrator;
 use App\Models\AdministratorMenu;
-use App\Constant\BackendApiConstant;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\Backend\LoginRequest;
@@ -22,17 +21,22 @@ class LoginController extends BaseController
 
     public function login(LoginRequest $request)
     {
+        if (captcha_image_check() === false) {
+            return $this->error(__('图形验证码错误'));
+        }
+
         ['username' => $username, 'password' => $password] = $request->filldata();
-        $admin = Administrator::whereEmail($username)->first();
+
+        $admin = Administrator::query()->where('email', $username)->first();
         if (!$admin) {
-            return $this->error(BackendApiConstant::ADMINISTRATOR_NOT_EXISTS);
+            return $this->error(__('邮箱不存在'));
         }
         if (!Hash::check($password, $admin->password)) {
-            return $this->error(BackendApiConstant::LOGIN_PASSWORD_ERROR);
+            return $this->error(__('密码错误'));
         }
 
         if ($admin->is_ban_login === 1) {
-            return $this->error(__('administrator cant login'));
+            return $this->error(__('当前管理员已被锁定无法登录'));
         }
 
         // jwt登录
@@ -123,5 +127,11 @@ class LoginController extends BaseController
         return $this->successData([
             'menus' => $data,
         ]);
+    }
+
+    public function logout()
+    {
+        Auth::guard(self::GUARD)->logout();
+        return $this->success();
     }
 }
